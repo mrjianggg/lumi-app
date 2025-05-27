@@ -1,0 +1,29 @@
+{
+	"name": "EspIdfProvisioning插件",
+	"id": "XM-EspIdfProvisioning",
+	"version": "v1.0.2025.05.25",
+	"description": "EspIdfProvisioning插件",
+	"_dp_type": "nativeplugin",
+	"_dp_nativeplugin": {
+		"android": {
+			"plugins": [{
+				"type": "module",
+				"name": "XM-EspIdfModule",
+				"class": "com.xiaoming.plugin_esp_idf_provisioning.EspIdfModule"
+			}],
+			"dependencies": [
+				"com.github.espressif:esp-idf-provisioning-android:lib-2.2.3",
+				"org.greenrobot:eventbus:3.3.1"
+			],
+			"abis": [
+				"armeabi-v7a", "arm64-v8a"
+			],
+			"compileOptions": {
+				"sourceCompatibility": "1.8",
+				"targetCompatibility": "1.8"
+			},
+			"integrateType": "aar",
+			"minSdkVersion": "23"
+		}
+	}
+}
