@@ -206,7 +206,6 @@
 				<view class="debug-actions">
 					<button class="debug-btn test-btn" @click="testWifiScan">测试扫描</button>
 					<button class="debug-btn test-btn" @click="testGetDeviceInfo">获取设备信息</button>
-					<button class="debug-btn step-btn" @click="goToStep2">跳转步骤2</button>
 					<button class="debug-btn copy-btn" @click="copyDebugLog">复制日志</button>
 					<button class="debug-btn clear-btn" @click="clearDebugLog">清空日志</button>
 				</view>
@@ -408,7 +407,7 @@ export default {
 	methods: {
 		// 获取设备信息和能力
 		getDeviceInfo() {
-			this.addDebugLog('开始获取设备信息...');
+			this.addDebugLog('开始获取设备信息11...');
 			this.addDebugLog('根据ESP-IDF BLE传输层实现，设备信息应该在连接时就已经获取');
 			
 			uni.showLoading({
@@ -454,70 +453,13 @@ export default {
 				if (!deviceInfoFound) {
 					uni.hideLoading();
 					this.addDebugLog('基于连接成功状态推断设备信息...');
-					
-					// 由于设备连接成功且安全会话建立，我们可以推断基本信息
-					const deviceInfo = this.inferDeviceCapabilities();
-					this.handleDeviceInfoResult(deviceInfo);
 				}
 				
 			} catch (error) {
 				uni.hideLoading();
 				this.addDebugLog('获取设备信息异常: ' + error.toString());
 				
-				// 异常情况下推断设备信息
-				const deviceInfo = this.inferDeviceCapabilities();
-				this.handleDeviceInfoResult(deviceInfo);
 			}
-		},
-		
-		// 基于连接状态和设备特征推断设备能力
-		inferDeviceCapabilities() {
-			this.addDebugLog('开始推断设备能力...');
-			
-			const capabilities = [];
-			let securityVersion = 1;
-			let version = "v1.1";
-			
-			// 基于设备名称推断能力
-			if (this.deviceName.startsWith('Lumi_')) {
-				this.addDebugLog('检测到Lumi设备，推断支持WiFi扫描');
-				capabilities.push('wifi_scan');
-			}
-			
-			// 基于连接成功推断安全能力
-			if (this.connectionInfo && this.connectionInfo.success) {
-				this.addDebugLog('设备连接成功，推断支持基本安全功能');
-				
-				// 如果连接成功，说明设备支持BLE通信
-				capabilities.push('ble_transport');
-				
-				// 根据设备日志中的"Security session setup OK"推断安全版本
-				if (this.connectionInfo.message === 'EVENT_DEVICE_CONNECTED') {
-					this.addDebugLog('安全会话建立成功，推断安全版本为1');
-					securityVersion = 1;
-				}
-			}
-			
-			// 基于ESP-IDF标准推断常见能力
-			capabilities.push('wifi_prov'); // WiFi配网是ESP-IDF的核心功能
-			
-			const inferredInfo = {
-				success: true,
-				data: {
-					prov: {
-						ver: version,
-						sec_ver: securityVersion,
-						sec_patch_ver: 0,
-						cap: capabilities
-					}
-				},
-				msg: '基于设备特征和连接状态推断的设备信息',
-				inferred: true
-			};
-			
-			this.addDebugLog('推断的设备信息: ' + JSON.stringify(inferredInfo, null, 2));
-			
-			return inferredInfo;
 		},
 		
 		// 处理设备信息获取结果
@@ -530,10 +472,6 @@ export default {
 			} else {
 				this.addDebugLog('获取设备信息失败: ' + (ret ? ret.msg || '未知错误' : '回调数据为空'));
 				
-				// 如果获取失败，使用推断的设备信息
-				this.addDebugLog('使用推断的设备信息作为备选方案');
-				const inferredInfo = this.inferDeviceCapabilities();
-				this.processDeviceInfo(inferredInfo);
 			}
 		},
 		
@@ -918,11 +856,6 @@ export default {
 			this.scanWifiNetworks();
 		},
 		
-		// 跳转到步骤2
-		goToStep2() {
-			this.currentStep = 2;
-		},
-		
 		// 测试获取设备信息
 		testGetDeviceInfo() {
 			this.addDebugLog('开始测试获取设备信息...');
@@ -937,7 +870,7 @@ export default {
 			eventTypes.forEach(eventType => {
 				try {
 					blueModule.addEventListener(eventType, (ret) => {
-						this.addDebugLog(`${eventType} 事件结果: ` + JSON.stringify(ret, null, 2));
+						this.addDebugLog(`${eventType} 事件结果222: ` + JSON.stringify(ret, null, 2));
 						if (ret && (ret.success || ret.data || ret.prov)) {
 							this.handleDeviceInfoResult(ret);
 						}
