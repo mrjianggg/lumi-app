@@ -1,6 +1,33 @@
 {
 	"pages": [{
-		"path": "pages/index/provisioning-flow",
+		"path": "pages/device/index",
+		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	}, {
+		"path": "pages/chat/index",
+		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	}, {
+		"path": "pages/profile/index",
+		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	}, {
+		"path": "pages/provisioning/index",
 		"style": {
 			"navigationStyle": "custom",
 			"navigationBarTitleText": "",
@@ -14,6 +41,26 @@
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#fff"
+	},
+	"tabBar": {
+		"color": "#999999",
+		"selectedColor": "#333333",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/device/index",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/provisioning/index",
+				"text": "聊天"
+			},
+			{
+				"pagePath": "pages/profile/index",
+				"text": "个人"
+			}
+		]
 	},
 	"uniIdRouter": {}
 }
