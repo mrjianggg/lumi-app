@@ -1,0 +1,11 @@
+framework module ESPProvision {
+  umbrella header "ESPProvision-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module ESPProvision.Swift {
+  header "ESPProvision-Swift.h"
+  requires objc
+}

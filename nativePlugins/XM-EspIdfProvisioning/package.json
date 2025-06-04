@@ -24,6 +24,25 @@
 			},
 			"integrateType": "aar",
 			"minSdkVersion": "23"
+		},
+		"ios": {
+			"plugins": [{
+				"type": "module",
+				"name": "XM-EspIdfModule",
+				"class": "XmEspProvision"
+			}],
+			"frameworks": [
+				"ESPProvision.framework",
+				"SwiftProtobuf.framework"
+			],
+			"embedFrameworks": [
+
+			],
+			"validArchitectures": [
+				"arm64"
+			],
+			"deploymentTarget": "13.0",
+			"integrateType": "library"
 		}
 	}
 }
