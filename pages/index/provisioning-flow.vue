@@ -28,7 +28,7 @@
 							<!-- 权限检查步骤显示详细信息 -->
 							<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
 						</view>
-						<view @click="checkPermissionsAndNetwork" v-if="index === 0">
+						<view @click="checkPermissionsAndNetwork" v-if="index === 0 && getStepClass(index) === 'error'">
 							<text>重试</text>
 						</view>
 					</view>
@@ -153,6 +153,8 @@ export default {
 			isConnecting: false,
 			wifiScanRetryCount: 0,
 			maxRetryCount: 3,
+			// 添加步骤历史记录
+			stepHistory: ['checking'],
 			// 蓝牙和网络状态检查
 			permissionStatus: {
 				bluetooth: false,        // 蓝牙开启状态
@@ -227,6 +229,7 @@ export default {
 					console.log('✅ 所有状态检查通过，1秒后开始扫描蓝牙');
 					setTimeout(() => {
 						this.currentStage = 'scanning';
+						this.pushStep('scanning');
 						this.startScanningProcess();
 					}, 1000);
 				} else {
@@ -481,8 +484,9 @@ export default {
 			
 			console.log('✅ 开始蓝牙扫描流程');
 			this.scanningActive = true;
-			
+			console.log('blueModule111===',blueModule);
 			if (blueModule) {
+				console.log('blueModule===',blueModule);
 				blueModule.startBleScan({
 					securityType: 2,
 					deviceNamePrefix: 'Lumi_'
@@ -495,6 +499,7 @@ export default {
 							serviceUuid: ret.data.serviceUuid
 						};
 						this.currentStage = 'deviceFound';
+						this.pushStep('deviceFound');
 					}
 				});
 			}
@@ -504,6 +509,7 @@ export default {
 		closeModal() {
 			// 回到扫描状态
 			this.currentStage = 'scanning';
+			this.pushStep('scanning');
 			this.startScanningProcess();
 		},
 		
@@ -519,6 +525,7 @@ export default {
 						this.setPopActive = false;
 						// 自动扫描WiFi网络 - 先检查权限
 						this.currentStage = 'wifiConfig';
+						this.pushStep('wifiConfig');
 						this.scanWifiNetworks();
 					} else {
 						// 设置POP失败
@@ -547,10 +554,15 @@ export default {
 				if (ret.success && ret.msg == 'EVENT_DEVICE_CONNECTED') {
 					// 设置POP
 					this.currentStage = 'setingPop';
+					this.pushStep('setingPop');
 					this.setProofOfPossession();
 				}
 			});
 
+		},
+		// 断开连接
+		disconnectDevice() {
+			blueModule.disconnectDevice();
 		},
 
 		// 扫描WiFi网络
@@ -690,6 +702,7 @@ export default {
 			
 			this.isConnecting = true;
 			this.currentStage = 'provisioning';
+			this.pushStep('provisioning');
 			
 			if (blueModule) {
 				blueModule.doProvisioning({
@@ -702,9 +715,6 @@ export default {
 							title: '配网成功',
 							icon: 'success'
 						});
-						setTimeout(() => {
-							this.goBack();
-						}, 2000);
 					} else {
 						uni.showToast({
 							title: ret.msg || '配网失败',
@@ -720,9 +730,149 @@ export default {
 			}
 		},
 		
+		// 添加步骤到历史记录
+		pushStep(step) {
+			if (this.stepHistory[this.stepHistory.length - 1] !== step) {
+				this.stepHistory.push(step);
+				console.log('步骤历史更新:', this.stepHistory);
+			}
+		},
+		
+		// 清理当前阶段的状态和操作
+		cleanupCurrentStage() {
+			console.log('清理当前阶段:', this.currentStage);
+			
+			// 停止蓝牙扫描
+			if (blueModule) {
+				try {
+					blueModule.stopBleScan();
+					console.log('已停止蓝牙扫描');
+				} catch (error) {
+					console.log('停止蓝牙扫描失败:', error);
+				}
+			}
+			
+			// 重置各种活动状态
+			this.scanningActive = false;
+			this.setPopActive = false;
+			this.isConnecting = false;
+			
+			// 隐藏加载提示
+			uni.hideLoading();
+			
+			// 根据当前阶段进行特定清理
+			switch (this.currentStage) {
+				case 'wifiConfig':
+					// 清理WiFi相关数据
+					this.wifiName = '';
+					this.wifiPassword = '';
+					this.wifiList = [];
+					this.showWifiList = true;
+					this.passwordVisible = false;
+					this.disconnectDevice();
+					break;
+				case 'deviceFound':
+					// 重置设备信息
+					this.foundDevice = {
+						name: 'Namyvera',
+						deviceId: '',
+						rssi: -45
+					};
+					break;
+				case 'provisioning':
+					// 重置连接状态
+					this.isConnecting = false;
+					break;
+			}
+		},
+		
+		// 返回到指定步骤
+		goToStep(targetStep) {
+			console.log(`从 ${this.currentStage} 返回到 ${targetStep}`);
+			
+			// 清理当前状态
+			this.cleanupCurrentStage();
+			
+			// 更新当前阶段
+			this.currentStage = targetStep;
+			
+			// 更新步骤历史 - 移除当前步骤之后的所有步骤
+			const targetIndex = this.stepHistory.lastIndexOf(targetStep);
+			if (targetIndex !== -1) {
+				this.stepHistory = this.stepHistory.slice(0, targetIndex + 1);
+			} else {
+				// 如果目标步骤不在历史中，添加它
+				this.pushStep(targetStep);
+			}
+			
+			// 根据目标步骤执行相应操作
+			switch (targetStep) {
+				case 'checking':
+					// 重新检查权限和网络
+					this.permissionStatus.checking = true;
+					this.checkPermissionsAndNetwork();
+					break;
+				case 'scanning':
+					// 重新开始扫描
+					this.scanningActive = true;
+					this.startScanningProcess();
+					break;
+				case 'wifiConfig':
+					// 重新扫描WiFi网络
+					this.scanWifiNetworks();
+					break;
+			}
+		},
+		
 		// 返回
 		goBack() {
-			uni.navigateBack();
+			console.log('当前阶段:', this.currentStage);
+			console.log('步骤历史:', this.stepHistory);
+			
+			// 根据当前阶段确定返回逻辑
+			switch (this.currentStage) {
+				case 'checking':
+					// 如果在检查阶段，退出页面
+					console.log('在检查阶段，退出页面');
+					uni.navigateBack();
+					break;
+					
+				case 'scanning':
+					// 从扫描阶段返回到检查阶段
+					console.log('从扫描返回到检查');
+					this.goToStep('checking');
+					break;
+					
+				case 'deviceFound':
+					// 从设备发现返回到扫描阶段
+					console.log('从设备发现返回到扫描');
+					this.goToStep('scanning');
+					break;
+					
+				case 'setingPop':
+					// 从设置POP返回到扫描阶段
+					console.log('从设置POP返回到扫描');
+					this.goToStep('scanning');
+					break;
+					
+				case 'wifiConfig':
+					// 从WiFi配置返回到扫描阶段
+					console.log('从WiFi配置返回到扫描');
+					this.goToStep('scanning');
+					break;
+					
+				case 'provisioning':
+					// 从配网返回到WiFi配置
+					console.log('从配网返回到WiFi配置');
+					this.goToStep('wifiConfig');
+					break;
+					
+				default:
+					// 默认返回到上一页
+					console.log('未知阶段，退出页面');
+					uni.navigateBack();
+					break;
+			}
 		}
 	}
 }
@@ -731,14 +881,14 @@ export default {
 <style>
 .provisioning-container {
 	min-height: 100vh;
-	background-color: #f8f9fa;
 	position: relative;
+	padding-top: var(--status-bar-height);
 }
 
 /* 返回按钮 */
 .back-button {
-	position: absolute;
-	top: 20rpx;
+	position: fixed;
+	top: calc(var(--status-bar-height) + 20rpx);
 	left: 20rpx;
 	width: 60rpx;
 	height: 60rpx;
@@ -746,17 +896,21 @@ export default {
 	align-items: center;
 	justify-content: center;
 	z-index: 100;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 30rpx;
 }
 
 .back-icon {
 	font-size: 40rpx;
-	color: #333;
+	color: #fff;
 	font-weight: bold;
 }
 
 /* 主要内容 */
 .main-content {
-	padding: 80rpx 40rpx 40rpx;
+	padding: calc(var(--status-bar-height) + 100rpx) 40rpx 40rpx;
+	min-height: 100vh;
+	box-sizing: border-box;
 }
 
 /* 通用样式 */

@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../esp-idf-provisioning-android"
+		},
+		{
+			"path": "../ios-EspIdfProvisioning"
 		}
 	],
 	"settings": {}
