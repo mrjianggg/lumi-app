@@ -11,6 +11,11 @@
 				<text class="empty-desc">开始与您的设备对话吧</text>
 			</view>
 		</view>
+
+
+		<view @click="goToConfig" style="margin-top: 20rpx; text-align: center; color: #007AFF; font-size: 32rpx; font-weight: bold;">
+			点击进入配网界面
+		</view>
 	</view>
 </template>
 
@@ -22,7 +27,11 @@ export default {
 		}
 	},
 	methods: {
-		
+		goToConfig() {
+			uni.navigateTo({
+				url: '/pages/provisioning/index'
+			})
+		}
 	}
 }
 </script>
