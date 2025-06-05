@@ -1,5 +1,20 @@
 {
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"custom-tabbar": "@/components/custom-tabbar/custom-tabbar.vue"
+		}
+	},
 	"pages": [{
+		"path": "pages/tabbar-container/index",
+		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	}, {
 		"path": "pages/device/index",
 		"style": {
 			"navigationStyle": "custom",
@@ -42,25 +57,6 @@
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#fff"
 	},
-	"tabBar": {
-		"color": "#999999",
-		"selectedColor": "#333333",
-		"backgroundColor": "#ffffff",
-		"borderStyle": "black",
-		"list": [
-			{
-				"pagePath": "pages/device/index",
-				"text": "首页"
-			},
-			{
-				"pagePath": "pages/provisioning/index",
-				"text": "聊天"
-			},
-			{
-				"pagePath": "pages/profile/index",
-				"text": "个人"
-			}
-		]
-	},
+
 	"uniIdRouter": {}
 }

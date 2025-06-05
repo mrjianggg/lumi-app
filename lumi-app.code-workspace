@@ -16,5 +16,11 @@
 			"path": "../ios-EspIdfProvisioning"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cssrem.wxssScreenWidth": 402,
+		"cssrem.wxss": true,
+		"cssrem.vwDesign": 402,
+		"px-to-rpx.baseWidth": 402,
+		"px-to-rpx.fixedDigits": 1
+	}
 }

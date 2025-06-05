@@ -63,6 +63,7 @@ export default {
 	min-height: 100vh;
 	background: #f5f5f5;
 	padding-top: var(--status-bar-height);
+	padding-bottom: 180rpx; /* 为自定义tabBar预留空间 */
 }
 
 .profile-header {
