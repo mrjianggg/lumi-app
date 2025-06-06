@@ -50,12 +50,12 @@
 								</view>
 
 								<!-- 设置角色按钮 -->
-								<view class="set-box" @click="setRole(device)">
-									<view class="set-box-left">
+								<view class="set-box">
+									<view class="set-box-left" @click="setRole(device)">
 										<image class="set-box-left-icon" src="/static/icon/mingcute_ai-fill.svg">
 										</image> 设置角色
 									</view>
-									<view class="set-box-right">
+									<view class="set-box-right" @click="setSetting(device)">
 										<image class="set-box-right-icon" src="/static/icon/Settings.svg"></image>
 									</view>
 								</view>
@@ -281,6 +281,13 @@
 			setRole(device) {
 				uni.navigateTo({
 					url: '/pages/device/role'
+				})
+			},
+
+			// 设置设备
+			setSetting(device) {
+				uni.navigateTo({
+					url: '/pages/device/setting'
 				})
 			},
 

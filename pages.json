@@ -94,6 +94,17 @@
 				"titleNView": false
 			}
 		}
+	},
+	{
+		"path" : "pages/device/setting",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
 	}],
 	"globalStyle": {
 		"navigationBarTextStyle": "white",
