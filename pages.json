@@ -2,7 +2,8 @@
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"custom-tabbar": "@/components/custom-tabbar/custom-tabbar.vue"
+			"custom-tabbar": "@/components/custom-tabbar.vue",
+			"head-return": "@/components/head-return.vue"
 		}
 	},
 	"pages": [{
@@ -44,6 +45,49 @@
 	}, {
 		"path": "pages/provisioning/index",
 		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+	{
+		"path" : "pages/device/role",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+	{
+		"path" : "pages/device/behavior",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},	{
+		"path" : "pages/profile/my-devices",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+	{
+		"path" : "pages/profile/exchange",
+		"style" : 
+		{
 			"navigationStyle": "custom",
 			"navigationBarTitleText": "",
 			"app-plus": {

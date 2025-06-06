@@ -53,7 +53,7 @@
 							<!-- 角色精灵卡片 -->
 							<view class="dream-card">
 								<view class="card-header">
-									<image  class="role-img" src="/static/img/roleImg.png"></image>
+									<image  mode="widthFix" class="role-img" src="/static/img/roleImg.png"></image>
 									<view class="card-content">
 										<view class="card-title">{{device.role.name}}</view>
 										<view class="card-desc">{{device.role.description}}</view>
@@ -74,7 +74,7 @@
 
 						
 						<!-- 行为引导按钮 -->
-						<button class="guide-button" @click="showComingSoon">
+						<button class="guide-button" @click="setBehavior">
 							行为引导 <image class="guide-button-icon" src="/static/icon/xwyd.svg"></image>
 						</button>
 						
@@ -244,21 +244,18 @@ export default {
 		onSwiperChange(e) {
 			this.currentDeviceIndex = e.detail.current;
 		},
-		
-		// 跳转到配网页面
+		// 设置角色
 		setRole(device) {
-			uni.showToast({
-				title: '功能即将开放',
-				icon: 'none'
-			});
+			uni.navigateTo({
+				url: '/pages/device/role'
+			})
 		},
 		
-		// 显示即将开放提示
-		showComingSoon() {
-			uni.showToast({
-				title: '功能即将开放',
-				icon: 'none'
-			});
+		// 行为引导
+		setBehavior() {
+			uni.navigateTo({
+				url: '/pages/device/behavior'
+			})
 		}
 	}
 }
@@ -408,7 +405,6 @@ export default {
 	align-items: center;
 	.role-img {
 		width: 125rpx;
-		height: 125rpx;
 	}
 	.card-content {
 		flex: 1;

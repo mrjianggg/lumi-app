@@ -15,9 +15,15 @@
 				<text class="menu-arrow">></text>
 			</view>
 			
-			<view class="menu-item" @click="showComingSoon">
+			<view class="menu-item" @click="openMyDevices">
 				<text class="menu-icon">📱</text>
 				<text class="menu-text">我的设备</text>
+				<text class="menu-arrow">></text>
+			</view>
+
+			<view class="menu-item" @click="openExchange">
+				<text class="menu-icon">📱</text>
+				<text class="menu-text">兑换</text>
 				<text class="menu-arrow">></text>
 			</view>
 			
@@ -53,6 +59,16 @@ export default {
 				title: '功能即将开放',
 				icon: 'none'
 			});
+		},
+		openMyDevices() {
+			uni.navigateTo({
+				url: '/pages/profile/my-devices'
+			})
+		},
+		openExchange() {
+			uni.navigateTo({
+				url: '/pages/profile/exchange'
+			})
 		}
 	}
 }
