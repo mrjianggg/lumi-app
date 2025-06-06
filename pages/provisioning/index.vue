@@ -1,9 +1,16 @@
 <template>
 	<view class="provisioning-container">
 		<!-- 返回按钮 -->
-		<view class="back-button" @click="goBack">
-			<text class="back-icon">‹</text>
+		<head-return v-if="currentStage === 'checking'" :toPage="0" title=""></head-return>
+
+		<view class="page-header" v-else>
+			<image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
+			<view class="page-header-title">
+			<text>{{ title }}</text>
+			</view>
+			<view class="page-header-back"></view>
 		</view>
+		
 		
 		<!-- 主要内容区域 -->
 		<view class="main-content">
@@ -132,7 +139,7 @@
 </template>
 
 <script>
-var blueModule = uni.requireNativePlugin("XM-EspIdfModule")
+var blueModule = uni.requireNativePlugin("XM-EspIdfModule2")
 
 export default {
 	data() {
@@ -878,7 +885,27 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 134.3rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #D9D9D9;
+
+  .page-header-back {
+    margin-left: 30rpx;
+    width: 44.8rpx;
+    height: 44.8rpx;
+  }
+
+  .page-header-title {
+    font-size: 44.8rpx;
+    font-weight: 400;
+    color: #303030;
+  }
+}
 .provisioning-container {
 	min-height: 100vh;
 	position: relative;
