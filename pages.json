@@ -34,7 +34,7 @@
 			}
 		}
 	}, {
-		"path": "pages/profile/index",
+		"path": "pages/personal/index",
 		"style": {
 			"navigationStyle": "custom",
 			"navigationBarTitleText": "",
@@ -74,7 +74,7 @@
 			}
 		}
 	},	{
-		"path" : "pages/profile/my-devices",
+		"path" : "pages/personal/my-devices",
 		"style" : 
 		{
 			"navigationStyle": "custom",
@@ -85,7 +85,7 @@
 		}
 	},
 	{
-		"path" : "pages/profile/exchange",
+		"path" : "pages/personal/exchange",
 		"style" : 
 		{
 			"navigationStyle": "custom",
@@ -97,6 +97,39 @@
 	},
 	{
 		"path" : "pages/device/setting",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+	{
+		"path" : "pages/personal/setting",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},	
+	{
+		"path" : "pages/personal/user-info",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+	{
+		"path" : "pages/login/index",
 		"style" : 
 		{
 			"navigationStyle": "custom",

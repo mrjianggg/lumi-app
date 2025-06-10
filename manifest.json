@@ -1,5 +1,5 @@
 {
-    "name" : "EspIdfProvisioning",
+    "name" : "lumi-app",
     "appid" : "__UNI__151B7AA",
     "description" : "",
     "versionName" : "1.0.0",
@@ -19,7 +19,8 @@
         /* 模块配置 */
         "modules" : {
             "Geolocation" : {},
-            "Bluetooth" : {}
+            "Bluetooth" : {},
+            "Camera" : {}
         },
         /* 应用发布信息 */
         "distribute" : {
@@ -56,7 +57,10 @@
                 "dSYMs" : false,
                 "privacyDescription" : {
                     "NSBluetoothPeripheralUsageDescription" : "配网",
-                    "NSBluetoothAlwaysUsageDescription" : "配网"
+                    "NSBluetoothAlwaysUsageDescription" : "配网",
+                    "NSCameraUsageDescription" : "需要访问您的相机来拍摄和上传头像",
+                    "NSPhotoLibraryUsageDescription" : "需要访问您的相册来选择和上传图片",
+                    "NSPhotoLibraryAddUsageDescription" : "需要访问您的相册来保存图片"
                 }
             },
             /* SDK配置 */

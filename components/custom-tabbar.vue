@@ -43,7 +43,7 @@ export default {
           selectedIconPath: '/static/tabBar/chat-clicked.png'
         },
         {
-          pagePath: '/pages/profile/index',
+          pagePath: '/pages/personal/index',
           text: '个人',
           iconPath: '/static/tabBar/profile.png',
           selectedIconPath: '/static/tabBar/profile-clicked.png'

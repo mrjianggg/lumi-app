@@ -19,7 +19,7 @@
       v-show="currentTabIndex === 2" 
       class="tab-page"
     >
-      <profile-page ref="profilePage" />
+      <personal-page ref="personalPage" />
     </view>
     
     <!-- 自定义TabBar -->
@@ -34,14 +34,14 @@
 // 导入页面组件
 import DevicePage from '../device/index.vue'
 import ChatPage from '../chat/index.vue'
-import ProfilePage from '../profile/index.vue'
+import PersonalPage from '../personal/index.vue'
 
 export default {
   name: 'TabbarContainer',
   components: {
     DevicePage,
     ChatPage,
-    ProfilePage
+    PersonalPage
   },
   data() {
     return {
@@ -105,7 +105,7 @@ export default {
       const componentRefs = [
         this.$refs.devicePage,
         this.$refs.chatPage, 
-        this.$refs.profilePage
+        this.$refs.personalPage
       ];
       
       if (toAll) {
