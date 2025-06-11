@@ -43,8 +43,10 @@
 				class="country-list" 
 				scroll-y 
                 enhanced
+				:scroll-top="scrollTop"
 				:scroll-into-view="scrollIntoView"
-				scroll-with-animation="false"
+				scroll-with-animation="true"
+				:key="scrollViewKey"
 			>
 				<view v-for="(group, letter) in groupedCountries" :key="letter" class="country-group">
 					<view :id="`letter-${letter}`" class="group-header">{{ letter }}</view>
@@ -77,7 +79,10 @@
 		data() {
 			return {
 				searchKeyword: '',
+				scrollTop: 0,
 				scrollIntoView: '',
+				oldScrollTop: 0,
+				scrollViewKey: 0,
 				currentLetter: 'A',
 			}
 		},
@@ -129,7 +134,9 @@
 			// 重置弹窗状态
 			resetModal() {
 				this.searchKeyword = '';
-				this.scrollIntoView = '';
+				this.scrollTop = 0;
+				this.oldScrollTop = 0;
+				this.scrollViewKey++;
 				this.currentLetter = 'A';
 			},
 			
@@ -146,22 +153,40 @@
 			// 搜索输入
 			onSearchInput() {
 				// 搜索时重置滚动位置
-				this.scrollIntoView = '';
+				this.scrollTop = 0;
+				this.oldScrollTop = 0;
 				this.currentLetter = 'A';
 			},
 			
 			// 滚动到指定字母
 			scrollToLetter(letter) {
-                console.log('letter===',letter);
+				console.log('letter===', letter);
 				this.currentLetter = letter;
-				this.scrollIntoView = '';
 				
-				// 使用setTimeout确保DOM更新
-				setTimeout(() => {
-					this.scrollIntoView = `letter-${letter}`;
-				}, 50);
+				// 简化滚动方法
+				this.simpleScrollTo(letter);
 			},
-		
+			
+			// 简化的滚动方法
+			simpleScrollTo(targetLetter) {
+				// 找到目标字母在alphabetList中的索引
+				const targetIndex = this.alphabetList.indexOf(targetLetter);
+				if (targetIndex === -1) return;
+				
+				// 简单的位置计算：每个分组大约150px高度（包含标题和几个国家）
+				const approximatePosition = targetIndex * 150;
+				
+				console.log(`滚动到字母 ${targetLetter}，索引：${targetIndex}，位置：${approximatePosition}px`);
+				
+				// 尝试两种方法：先用scroll-top，再用scroll-into-view作为备选
+				this.scrollTop = approximatePosition;
+				
+				// 如果scroll-top不工作，尝试scroll-into-view
+				setTimeout(() => {
+					this.scrollIntoView = '';
+					this.scrollIntoView = `letter-${targetLetter}`;
+				}, 100);
+			},
 		}
 	}
 </script>
@@ -171,6 +196,7 @@
 	.country-modal-overlay {
 		position: absolute;
 		top: 0;
+		bottom: 0;
 		left: 0;
 		width: 100%;
 		min-height: 100vh;
@@ -241,8 +267,6 @@
                 }
             }
 
-
-			
 			.alphabet-index {
 				position: fixed;
 				right: 20rpx;
@@ -262,13 +286,23 @@
 					color: #666666;
 					margin-bottom: 4rpx;
 					cursor: pointer;
+					border-radius: 50%;
+					transition: all 0.2s ease;
+					
+					/* &.active {
+						background-color: #007AFF;
+						color: #FFFFFF;
+						font-weight: 600;
+					} */
 				}
 			}
 			
 			.country-list {
-                margin-top: 280rpx;
-				flex: 1;
-				height: 100%;
+				position: absolute;
+				top: 280rpx;
+				left: 0;
+				right: 0;
+				bottom: 0;
 				.country-group {
                     padding-right: 80rpx;
 					.group-header {
