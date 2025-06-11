@@ -57,19 +57,19 @@
 			<!-- 第三方登录 -->
 			<view class="third-party-login">
 				<view class="google-login-btn" @click="loginWithGoogle">
-					<image src="/static/icon/google.svg" mode="widthFix" class="google-icon"></image>
-					<text>Log in with Google</text>
+					<image src="/static/icon/GoogleLogo.svg" mode="widthFix" class="google-icon"></image>
+					<text>Login with Google</text>
 				</view>
 				
 				<view class="apple-login-btn" @click="loginWithApple">
-					<image src="/static/icon/apple.svg" mode="widthFix" class="apple-icon"></image>
-					<text>Log in with Apple</text>
+					<image src="/static/icon/AppleLogo.svg" mode="widthFix" class="apple-icon"></image>
+					<text>Login with Apple</text>
 				</view>
 			</view>
 			
 			<!-- 用户协议 -->
 			<view class="terms-text">
-				<text>By continuing, you accept our </text>
+				<text>By continuing, you accept our EULA </text>
 				<text class="link-text" @click="openTerms">Terms of Service</text>
 				<text> and </text>
 				<text class="link-text" @click="openPrivacy">Privacy Policy</text>
@@ -321,38 +321,32 @@
 			.verification-section {
 				display: flex;
 				align-items: center;
-				margin-bottom: 50rpx;
-				
 				.verification-input {
 					flex: 1;
-					height: 100rpx;
-					border: 2rpx solid #E5E5E5;
-					border-radius: 20rpx;
+					height: 74.6rpx;
+					border: 1px solid #D9D9D9;
+					border-radius: 40rpx;
 					padding: 0 30rpx;
-					font-size: 32rpx;
-					color: #2C2C2C;
+					font-size: 29.9rpx;
+					color: #303030;
 					margin-right: 20rpx;
 					
-					&::placeholder {
-						color: #999999;
+					.uni-input-placeholder {
+						color: #B3B3B3;
+						font-size: 29.9rpx;
 					}
 				}
 				
 				.send-sms-btn {
-					width: 200rpx;
-					height: 100rpx;
-					background-color: #F5F5F5;
-					border-radius: 20rpx;
+					width: 212.7rpx;
+					height: 74.6rpx;
+					border-radius: 40rpx;
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					font-size: 28rpx;
-					color: #666666;
-					border: 2rpx solid #E5E5E5;
-					
-					&:not(.disabled):active {
-						background-color: #E5E5E5;
-					}
+					font-size: 29.9rpx;
+					color: #1E1E1E;
+					border: 1px solid #767676;
 					
 					&.disabled {
 						opacity: 0.5;
@@ -361,17 +355,18 @@
 			}
 			
 			.login-btn {
+				margin-top: 29.9rpx;
 				width: 100%;
-				height: 100rpx;
-				background-color: #6C5CE7;
+				height: 89.6rpx;
+				background-color: #6D5BE3;
+				border: 1px solid #2C2C2C;
 				border-radius: 50rpx;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				font-size: 36rpx;
-				font-weight: 600;
-				color: #FFFFFF;
-				margin-bottom: 50rpx;
+				font-size: 29.9rpx;
+				font-weight: 400;
+				color: #F5F5F5;
 				
 				&:active {
 					background-color: #5A4BD6;
@@ -379,72 +374,67 @@
 			}
 			
 			.divider {
+				margin-top: 104.5rpx;
 				display: flex;
 				align-items: center;
-				margin-bottom: 40rpx;
 				
 				.line {
 					flex: 1;
-					height: 2rpx;
-					background-color: #E5E5E5;
+					height: 1px;
+					background-color: #D9D9D9;
 				}
 				
 				.divider-text {
 					margin: 0 30rpx;
-					font-size: 28rpx;
-					color: #999999;
+					font-size: 29.9rpx;
+					color: #1E1E1E;
 				}
 			}
 			
 			.third-party-login {
-				margin-bottom: 40rpx;
+				margin-top: 29.9rpx;
+				margin-bottom: 106.3rpx;
 				
 				.google-login-btn, .apple-login-btn {
 					width: 100%;
-					height: 100rpx;
+					height: 89.6rpx;
 					border-radius: 50rpx;
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					font-size: 32rpx;
-					font-weight: 500;
-					margin-bottom: 20rpx;
+					font-size: 29.9rpx;
+					font-weight: 400;
+					margin-bottom: 29.9rpx;
 					
 					image {
-						width: 40rpx;
-						height: 40rpx;
+						width: 44.8rpx;
+						height: 44.8rpx;
 						margin-right: 20rpx;
 					}
 				}
 				
 				.google-login-btn {
 					background-color: #FFFFFF;
-					border: 2rpx solid #E5E5E5;
-					color: #2C2C2C;
-					
-					&:active {
-						background-color: #F8F8F8;
-					}
+					border: 1px solid #D9D9D9;
+					color: #0000008A;
 				}
 				
 				.apple-login-btn {
 					background-color: #2C2C2C;
 					color: #FFFFFF;
-					
-					&:active {
-						background-color: #1A1A1A;
-					}
 				}
 			}
 			
 			.terms-text {
+				width: 460.8rpx;
+				margin: 0 auto;
 				text-align: center;
-				font-size: 24rpx;
-				color: #999999;
+				font-size: 22.4rpx;
+				color: #1E1E1E;
 				line-height: 1.5;
 				
 				.link-text {
-					color: #6C5CE7;
+					color: #0059FE;
 					text-decoration: underline;
 				}
 			}
