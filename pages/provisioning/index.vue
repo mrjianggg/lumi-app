@@ -599,7 +599,7 @@ export default {
 							this.deviceList.push({
 								name: ret.data.name,
 								deviceId: ret.data.deviceId,
-								serviceUuid: ret.data.serviceUuid
+								serviceUuid: ret.data.serviceUuid || ret.data.advertisServiceUUIDs[0]
 							});
 							
 							// 如果是第一个设备，显示弹窗
@@ -662,13 +662,13 @@ export default {
 
 		// 连接设备
 		connectDevice() {
-			
+			console.log('this.foundDevice=',this.foundDevice);
 			blueModule.connectDevice({
 				/**
 				 * {"success":true,"msg":"onLeScan","data":{"mBleAddress":"1AF92E22-C653-272E-06AF-46D92E4B8963","mDeviceType":2,"mBleName":"Fuwinda 6199"}}
 				 */
 				mac: this.foundDevice.deviceId, //mac地址
-				serviceUuid: this.foundDevice.serviceUuid //传给你的serviceUuid
+				serviceUuid: this.foundDevice.serviceUuid
 			}, (ret) => {
 				//扫描回调结果
 				console.log('连接设备ret:',ret)
