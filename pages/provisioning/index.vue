@@ -47,10 +47,14 @@
 								<view @click="checkPermissionsAndNetwork" v-if="index === 0 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
 								<!-- 配网失败重试按钮 -->
 								<view @click="retryProvisioning" v-if="index === 6 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
+								<!-- 扫描刷新按钮 -->
+								<view @click="startScanningBle" v-if="index === 1 && (scanningFailed || !scanningActive)" style="margin-left: 16rpx;">🔄</view>
 								<!-- 权限检查步骤显示详细信息 -->
 								<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
 								<!-- 配网失败错误信息 -->
 								<text v-if="index === 6 && currentStage === 'provisioningFailed'" class="status-detail">{{provisioningStatus.errorMessage || '配网失败，请重试'}}</text>
+								<!-- 扫描失败错误信息 -->
+								<text v-if="index === 1 && scanningFailed" class="status-detail">扫描超时，请点击刷新重试</text>
 							</view>
 						</view>
 						<!-- 连接线 -->
@@ -177,6 +181,12 @@ export default {
 				deviceId: '',
 				rssi: -45
 			},
+			// 新增设备列表相关数据
+			deviceList: [], // 存储扫描到的所有设备
+			currentDeviceIndex: 0, // 当前显示设备的索引
+			scanTimeout: null, // 扫描超时定时器
+			scanTimeoutDuration: 15000, // 扫描超时时间（15秒）
+			scanningFailed: false, // 扫描是否失败
 			wifiName: '',
 			wifiPassword: '',
 			wifiList: [],
@@ -221,6 +231,11 @@ export default {
 	onUnload() {
 		if (blueModule) {
 			blueModule.stopBleScan();
+		}
+		// 清除扫描超时定时器
+		if (this.scanTimeout) {
+			clearTimeout(this.scanTimeout);
+			this.scanTimeout = null;
 		}
 	},
 	methods: {
@@ -269,7 +284,7 @@ export default {
 					setTimeout(() => {
 						this.currentStage = 'scanning';
 						this.pushStep('scanning');
-						this.startScanningProcess();
+						this.startScanningBle();
 					}, 1000);
 				} else {
 					// 状态检查失败，显示详细错误信息
@@ -441,6 +456,19 @@ export default {
 				}
 			}
 			
+			// 特殊处理第1步（扫描蓝牙设备）
+			if (stepIndex === 1) {
+				if (this.scanningFailed) {
+					return 'error'; // 扫描失败显示错误状态
+				} else if (this.currentStage === 'scanning' && this.scanningActive) {
+					return 'active'; // 正在扫描显示活动状态
+				} else if (this.currentStage === 'deviceFound' || this.currentStage === 'setingPop' || 
+						   this.currentStage === 'wifiConfig' || this.currentStage === 'provisioning' || 
+						   this.currentStage === 'provisioningSuccess' || this.currentStage === 'provisioningFailed') {
+					return 'completed'; // 已找到设备或后续阶段显示完成状态
+				}
+			}
+			
 			const stageStepMap = {
 				'checking': 0,                // 第0步进行中（权限检查）
 				'scanning': 1,                // 第1步进行中
@@ -508,7 +536,7 @@ export default {
 		},
 
 		// 开始扫描蓝牙
-		startScanningProcess() {
+		startScanningBle() {
 			console.log('准备开始蓝牙扫描...');
 			console.log('当前状态:', {
 				bluetooth: this.permissionStatus.bluetooth,
@@ -529,6 +557,29 @@ export default {
 			
 			console.log('✅ 开始蓝牙扫描流程');
 			this.scanningActive = true;
+			// 清空设备列表
+			this.deviceList = [];
+			this.currentDeviceIndex = 0;
+			// 重置扫描失败状态
+			this.scanningFailed = false;
+			
+			// 设置扫描超时
+			if (this.scanTimeout) {
+				clearTimeout(this.scanTimeout);
+			}
+			this.scanTimeout = setTimeout(() => {
+				console.log('扫描超时，停止扫描');
+				this.scanningActive = false;
+				this.scanningFailed = true; // 设置扫描失败状态
+				if (blueModule) {
+					blueModule.stopBleScan();
+				}
+				uni.showToast({
+					title: '扫描超时，请点击刷新重试',
+					icon: 'none'
+				});
+			}, this.scanTimeoutDuration);
+			
 			console.log('blueModule111===',blueModule);
 			if (blueModule) {
 				console.log('blueModule===',blueModule);
@@ -538,13 +589,26 @@ export default {
 				}, (ret) => {
 					console.log('蓝牙扫描结果ret:',ret)
 					if (ret.success && ret.msg == 'onPeripheralFound') {
-						this.foundDevice = {
-							name: ret.data.name,
-							deviceId: ret.data.deviceId,
-							serviceUuid: ret.data.serviceUuid
-						};
-						this.currentStage = 'deviceFound';
-						this.pushStep('deviceFound');
+						// 检查设备是否已存在
+						const deviceExists = this.deviceList.some(device => device.deviceId === ret.data.deviceId);
+						if (!deviceExists) {
+							if (this.scanTimeout) {
+								clearTimeout(this.scanTimeout);
+							}
+							// 添加新设备到列表
+							this.deviceList.push({
+								name: ret.data.name,
+								deviceId: ret.data.deviceId,
+								serviceUuid: ret.data.serviceUuid
+							});
+							
+							// 如果是第一个设备，显示弹窗
+							if (this.deviceList.length === 1) {
+								this.foundDevice = this.deviceList[0];
+								this.currentStage = 'deviceFound';
+								this.pushStep('deviceFound');
+							}
+						}
 					}
 				});
 			}
@@ -552,10 +616,20 @@ export default {
 		
 		// 关闭设备发现弹窗
 		closeModal() {
-			// 回到扫描状态
-			this.currentStage = 'scanning';
-			this.pushStep('scanning');
-			this.startScanningProcess();
+			// 检查是否还有其他设备
+			if (this.deviceList.length > this.currentDeviceIndex + 1) {
+				// 显示下一个设备
+				this.currentDeviceIndex++;
+				this.foundDevice = this.deviceList[this.currentDeviceIndex];
+			} else {
+				// 没有更多设备，回到扫描状态
+				this.currentStage = 'scanning';
+				this.pushStep('scanning');
+				// 如果扫描还在进行中，继续扫描
+				if (this.scanningActive) {
+					this.startScanningBle();
+				}
+			}
 		},
 		
 		// 设置POP
@@ -888,8 +962,15 @@ export default {
 				}
 			}
 			
+			// 清除扫描超时定时器
+			if (this.scanTimeout) {
+				clearTimeout(this.scanTimeout);
+				this.scanTimeout = null;
+			}
+			
 			// 重置各种活动状态
 			this.scanningActive = false;
+			this.scanningFailed = false;
 			this.setPopActive = false;
 			this.isConnecting = false;
 			
@@ -951,7 +1032,7 @@ export default {
 				case 'scanning':
 					// 重新开始扫描
 					this.scanningActive = true;
-					this.startScanningProcess();
+					this.startScanningBle();
 					break;
 				case 'wifiConfig':
 					// 重新扫描WiFi网络
@@ -1125,6 +1206,7 @@ export default {
 					flex: 1;
 					display: flex;
 					align-items: center;
+					justify-content: space-between;
 					position: relative;
 					.status-text {
 						font-size: 29.9rpx;
