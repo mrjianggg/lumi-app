@@ -1,7 +1,7 @@
 <template>
 	<view class="provisioning-container">
 		<!-- 返回按钮 -->
-		<head-return v-if="currentStage === 'checking'" :toPage="0" title=""></head-return>
+		<head-return v-if="currentStage === 'checking' || currentStage === 'provisioningSuccess'" :toPage="0" title=""></head-return>
 
 		<view class="page-header" v-else>
 			<image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
@@ -15,7 +15,7 @@
 		<!-- 主要内容区域 -->
 		<view class="main-content">
 			<!-- 通用阶段显示 -->
-			<view v-if="currentStage !== 'wifiConfig'" class="common-stage">
+			<view v-if="currentStage !== 'wifiConfig'">
 				<text class="stage-title">{{getStageTitle()}}</text>
 				
 				<!-- 统一的状态列表 -->
@@ -23,128 +23,153 @@
 					<view 
 						v-for="(step, index) in statusSteps" 
 						:key="index"
-						class="status-item" 
-						:class="getStepClass(index)"
+						class="status-item-wrapper"
 					>
-						<view class="status-icon">
-							<view v-if="getStepClass(index) === 'active'" class="loading-icon"></view>
-							<text v-else>{{getStepIcon(index)}}</text>
+						<!-- 状态项 -->
+						<view 
+							class="status-item" 
+							:class="getStepClass(index)"
+						>
+							<view class="status-icon" :class="getStepClass(index)">
+								<!-- 加载中图标 -->
+								<image v-if="getStepClass(index) === 'active'" src="/static/icon/loading.svg"   class="loading-icon"/>
+								<!-- 成功图标 -->
+								<image v-else-if="getStepClass(index) === 'completed'" src="/static/icon/status-success.svg"/>
+								<!-- 错误图标 -->
+								<image v-else-if="getStepClass(index) === 'error'" src="/static/icon/status-error.svg" />
+								<!-- 默认图标 -->
+								<image v-else src="/static/icon/default.svg"  class="status-default-icon"/>
+							</view>
+							
+							<view class="status-content">
+								<text class="status-text">{{step.text}}</text>
+								<!-- 权限检查重试按钮 -->
+								<view @click="checkPermissionsAndNetwork" v-if="index === 0 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
+								<!-- 配网失败重试按钮 -->
+								<view @click="retryProvisioning" v-if="index === 6 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
+								<!-- 权限检查步骤显示详细信息 -->
+								<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
+								<!-- 配网失败错误信息 -->
+								<text v-if="index === 6 && currentStage === 'provisioningFailed'" class="status-detail">{{provisioningStatus.errorMessage || '配网失败，请重试'}}</text>
+							</view>
 						</view>
-						<view class="status-text-container">
-							<text class="status-text">{{step.text}}</text>
-							<!-- 权限检查步骤显示详细信息 -->
-							<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
-						</view>
-						<view @click="checkPermissionsAndNetwork" v-if="index === 0 && getStepClass(index) === 'error'">
-							<text>重试</text>
-						</view>
+						<!-- 连接线 -->
+						<view class="connection-line" v-if="index < statusSteps.length - 1"></view>
 					</view>
+													
+
 				</view>
 				
 				<!-- 发现设备弹窗 -->
 				<view v-if="currentStage === 'deviceFound'" class="device-modal">
 					<view class="modal-content">
-						<text class="modal-title">附近设备</text>
-						<view class="close-button" @click="closeModal">×</view>
+						<view class="modal-header">
+							<view class="close-button"></view>
+							<view class="modal-title">附近设备</view>
+							<image @click="closeModal" class="close-button" src="/static/icon/model-close.svg" mode="widthFix"></image>
+						</view>
 						
-						<view class="device-info">
-							<view class="device-avatar">
-								<text class="device-emoji">🐑</text>
-							</view>
-							<text class="device-name">{{foundDevice.name}}</text>
+
+						<image class="device-img" src="/static/img/deviceImg.png" mode="widthFix"></image>
+
+						<view class="device-name">
+							{{foundDevice.name}}
 						</view>
 						
 						<view class="modal-buttons">
-							<button class="modal-btn cancel-btn" @click="closeModal">忽略设备</button>
-							<button class="modal-btn confirm-btn" @click="connectDevice">开始绑定</button>
+							<view class="modal-btn cancel-btn" @click="closeModal">忽略设备</view>
+							<view class="modal-btn confirm-btn" @click="connectDevice">开始绑定</view>
 						</view>
 					</view>
 				</view>
 			</view>
 
 			<!-- 阶段4: WiFi配置 -->
-			<view v-if="currentStage === 'wifiConfig'" class="wifi-config-stage">
+			<view v-if="currentStage === 'wifiConfig'">
 				<text class="stage-title">设置{{foundDevice.name}}的Wi-Fi</text>
 				
 				<!-- WiFi图标 -->
-				<view class="wifi-icon-container">
-					<view class="wifi-icon">
-						<view class="wifi-signal"></view>
-						<view class="wifi-signal"></view>
-						<view class="wifi-signal"></view>
-						<view class="wifi-dot"></view>
-					</view>
-				</view>
+				<image class="wifi-icon" src="/static/img/Wifi.png" mode="widthFix"></image>
 				
 				<!-- WiFi名称输入 -->
 				<view class="wifi-input-section">
-					<text class="input-label">手动输入Wi-Fi名字</text>
 					<view class="wifi-input-container">
 						<input 
 							class="wifi-input" 
 							v-model="wifiName" 
-							placeholder="请输入Wi-Fi名称"
+							placeholder="手动输入Wi-Fi名字"
 							@focus="showWifiList = false"
 						/>
 					</view>
 				</view>
 				
 				<!-- 密码输入 -->
-				<view class="password-input-section">
-					<text class="input-label">输入密码</text>
+				<view class="password-input-section" v-if="provisioningPage === 2">
+					<view class="input-label">输入密码</view>
 					<view class="password-input-container">
 						<input 
 							class="password-input" 
 							v-model="wifiPassword" 
 							:type="passwordVisible ? 'text' : 'password'"
-							placeholder="请输入密码"
+							placeholder=""
 						/>
-						<view class="password-toggle" @click="togglePasswordVisible">
-							<text class="password-icon">{{passwordVisible ? '🙈' : '👁'}}</text>
-						</view>
+						<image class="password-toggle" @click="togglePasswordVisible" src="/static/icon/Eye.svg" mode="widthFix"></image>
 					</view>
 				</view>
 				
 				<!-- WiFi列表 -->
-				<view class="wifi-list-section">
+				<view class="wifi-list-section" v-if="provisioningPage === 1">
 					<view class="wifi-list-header" @click="toggleWifiList">
 						<text class="list-title">Wi-Fi 列表</text>
-						<view class="refresh-button" @click="scanWifiNetworks">
-							<text class="refresh-icon">🔄</text>
-						</view>
+						<image class="refresh-button" @click="scanWifiNetworks" src="/static/icon/Refresh.svg" mode="widthFix"></image>
 					</view>
-					
-					<view v-if="showWifiList" class="wifi-list">
-						<view 
-							v-for="(wifi, index) in wifiList" 
-							:key="index"
-							class="wifi-item"
-							@click="selectWifi(wifi)"
-						>
-							<text class="wifi-name">{{wifi.ssid}}</text>
-							<view class="wifi-signal-strength">
-								<text class="signal-icon">📶</text>
+					<view v-if="showWifiList && wifiList.length > 0">
+						<view class="wifi-list">
+							<view 
+								v-for="(wifi, index) in wifiList" 
+								:key="index"
+								class="wifi-item"
+								@click="selectWifi(wifi)"
+							>
+								<text class="wifi-name">{{wifi.ssid}}</text>
+								<image class="wifi-item-icon" src="/static/icon/Wifi-hui.svg" mode="widthFix"></image>
 							</view>
 						</view>
 					</view>
 				</view>
 				
+				<view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
+					发送数据到自定义端点
+				</view>
+
+				<view class="connect-wifi-btn" @click="onSelectWifi" v-if="provisioningPage === 1">
+					选择 Wi-Fi
+				</view>
+
 				<!-- 连接按钮 -->
-				<button class="connect-wifi-btn" @click="startDoProvisioning" :disabled="!wifiName || !wifiPassword">
+				<view class="connect-wifi-btn" @click="startDoProvisioning" v-if="provisioningPage === 2">
 					连接 Wi-Fi
-				</button>
+				</view>
 			</view>
+		</view>
+
+		<view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
+			发送数据到自定义端点
+		</view>
+
+		<view style="padding: 50rpx;" @click="disconnectDevice">
+			断开设备
 		</view>
 	</view>
 </template>
 
 <script>
-var blueModule = uni.requireNativePlugin("XM-EspIdfModule2")
+var blueModule = uni.requireNativePlugin("XM-EspIdfModule")
 
 export default {
 	data() {
 		return {
-			currentStage: 'checking', // checking, scanning, deviceFound, setingPop, wifiConfig, provisioning
+			currentStage: 'checking', // checking, scanning, deviceFound, setingPop, wifiConfig, provisioning, provisioningSuccess, provisioningFailed
 			scanningActive: true,
 			setPopActive: true,
 			foundDevice: {
@@ -162,6 +187,14 @@ export default {
 			maxRetryCount: 3,
 			// 添加步骤历史记录
 			stepHistory: ['checking'],
+			// 配网阶段状态跟踪
+			provisioningStatus: {
+				wifiConfigPushed: false,    // WiFi配置是否已推送成功
+				isWaitingForPairing: false, // 是否正在等待配对
+				pairingResult: null,        // 配对结果：'success' | 'failed' | null
+				errorMessage: ''            // 错误信息
+			},
+			provisioningPage: 1,
 			// 蓝牙和网络状态检查
 			permissionStatus: {
 				bluetooth: false,        // 蓝牙开启状态
@@ -171,9 +204,8 @@ export default {
 			},
 			// 状态步骤定义
 			statusSteps: [
-				{ text: '蓝牙开启及WiFi连接检查' },
+				{ text: '权限及网络正常' },
 				{ text: '正在扫描 BubblePal 蓝牙信号' },
-				{ text: '设置安全密钥 (POP)' },
 				{ text: '扫描 BubblePal wifi 信号' },
 				{ text: '手机连接 BubblePal' },
 				{ text: '用户输入 wifi 密码' },
@@ -389,7 +421,9 @@ export default {
 				'scanning': '正在扫描蓝牙信号',
 				'deviceFound': '正在扫描蓝牙信号',
 				'setingPop': '正在扫描蓝牙信号',
-				'provisioning': `等待${this.foundDevice.name}配对`
+				'provisioning': `等待${this.foundDevice.name}配对`,
+				'provisioningSuccess': `${this.foundDevice.name}配网成功`,
+				'provisioningFailed': `${this.foundDevice.name}配网失败`
 			};
 			return titles[this.currentStage] || '正在处理...';
 		},
@@ -408,63 +442,67 @@ export default {
 			}
 			
 			const stageStepMap = {
-				'checking': 0,      // 第0步进行中（权限检查）
-				'scanning': 1,      // 第1步进行中
-				'deviceFound': 1,   // 第1步完成
-				'setingPop': 2,     // 第2步进行中
-				'provisioning': 7   // 第7步完成，全部完成
+				'checking': 0,                // 第0步进行中（权限检查）
+				'scanning': 1,                // 第1步进行中
+				'deviceFound': 1,             // 第1步完成
+				'setingPop': 1,               // 设置POP阶段保持在第1步（隐藏的步骤）
+				'wifiConfig': 2,              // 第2步进行中（原来的第3步）
+				'provisioning': 6,            // 第6步进行中（等待配对）
+				'provisioningSuccess': 6,     // 第6步完成（配网成功）
+				'provisioningFailed': 6       // 第6步失败（配网失败）
 			};
 			
 			const currentStep = stageStepMap[this.currentStage];
 			
+			// 特殊处理第6步（等待BubblePal配对）
+			if (stepIndex === 6) {
+				if (this.currentStage === 'provisioning' && this.provisioningStatus.isWaitingForPairing) {
+					return 'active'; // 显示loading状态
+				} else if (this.currentStage === 'provisioningSuccess') {
+					return 'completed'; // 配网成功
+				} else if (this.currentStage === 'provisioningFailed') {
+					return 'error'; // 配网失败
+				} else if (currentStep > 6) {
+					return 'completed';
+				}
+			}
+			
 			if (stepIndex < currentStep) {
 				return 'completed';
 			} else if (stepIndex === currentStep) {
-				// 特殊处理：如果是scanning阶段且scanningActive为true，或者setingPop阶段且setPopActive为true
-				if ((this.currentStage === 'scanning' && stepIndex === 1 && this.scanningActive) ||
-					(this.currentStage === 'setingPop' && stepIndex === 2 && this.setPopActive)) {
+				// 特殊处理：如果是scanning阶段且scanningActive为true
+				if (this.currentStage === 'scanning' && stepIndex === 1 && this.scanningActive) {
 					return 'active';
 				}
-				return this.currentStage === 'provisioning' ? 'completed' : 'active';
-			} else if (this.currentStage === 'provisioning') {
-				return 'completed'; // 配网阶段所有步骤都显示完成
+				// 特殊处理：如果是配网阶段且在等待配对
+				if (this.currentStage === 'provisioning' && stepIndex === 6 && this.provisioningStatus.isWaitingForPairing) {
+					return 'active';
+				}
+				return 'active';
+			} else if (this.currentStage === 'provisioningSuccess' || this.currentStage === 'provisioningFailed') {
+				// 配网结束后，所有步骤都显示相应状态
+				if (stepIndex <= 6) {
+					return this.currentStage === 'provisioningSuccess' ? 'completed' : 'completed';
+				}
 			}
 			return '';
 		},
 		
-		// 获取步骤图标
-		getStepIcon(stepIndex) {
-			const stepClass = this.getStepClass(stepIndex);
-			if (stepClass === 'completed') {
-				return '✓';
-			} else if (stepClass === 'error') {
-				return '✗';
-			}
-			return '○';
-		},
-		
 		// 获取权限检查的详细文本
 		getPermissionDetailText() {
-			if (this.permissionStatus.checking) {
-				return '正在检查蓝牙和网络状态...';
-			}
 			
 			let details = [];
 			
 			// 蓝牙状态简化显示
-			if (this.permissionStatus.bluetooth) {
-				details.push('蓝牙✓');
-			} else {
+			if (!this.permissionStatus.bluetooth) {
 				details.push('蓝牙✗(未开启)');
 			}
 			
 			// 网络状态
-			if (this.permissionStatus.network) details.push('网络✓');
-			else details.push('网络✗(未连接)');
+			if (!this.permissionStatus.network) details.push('网络✗(未连接)');
 			
 			// WiFi状态
-			if (this.permissionStatus.wifi) details.push('WiFi✓');
-			else details.push('WiFi✗(未开启)');
+			if (!this.permissionStatus.wifi) details.push('WiFi✗(未开启)');
 			
 			return details.join(' ');
 		},
@@ -522,6 +560,7 @@ export default {
 		
 		// 设置POP
 		setProofOfPossession() {
+			console.log('setProofOfPossession11111');
 			this.setPopActive = true;
 			blueModule.setProofOfPossession({
 				pop: 'abcd1234'
@@ -532,6 +571,7 @@ export default {
 						this.setPopActive = false;
 						// 自动扫描WiFi网络 - 先检查权限
 						this.currentStage = 'wifiConfig';
+						this.provisioningPage = 1;
 						this.pushStep('wifiConfig');
 						this.scanWifiNetworks();
 					} else {
@@ -559,7 +599,7 @@ export default {
 				//扫描回调结果
 				console.log('连接设备ret:',ret)
 				if (ret.success && ret.msg == 'EVENT_DEVICE_CONNECTED') {
-					// 设置POP
+					// 设置POP（后台执行，用户不可见）
 					this.currentStage = 'setingPop';
 					this.pushStep('setingPop');
 					this.setProofOfPossession();
@@ -675,8 +715,9 @@ export default {
 		
 		// 选择WiFi
 		selectWifi(wifi) {
+			console.log('selectWifi11111',wifi);
 			this.wifiName = wifi.ssid;
-			this.showWifiList = false;
+			// this.showWifiList = false;
 		},
 		
 		// 切换WiFi列表显示
@@ -688,7 +729,11 @@ export default {
 		togglePasswordVisible() {
 			this.passwordVisible = !this.passwordVisible;
 		},
-		
+		onSelectWifi(){
+			if(this.wifiName.trim() !== ''){
+				this.provisioningPage = 2;
+			}
+		},
 		// 开始配网
 		startDoProvisioning() {
 			if (!this.wifiName) {
@@ -707,29 +752,65 @@ export default {
 				return;
 			}
 			
+			// 重置配网状态
+			this.provisioningStatus = {
+				wifiConfigPushed: false,
+				isWaitingForPairing: false,
+				pairingResult: null,
+				errorMessage: ''
+			};
+			
 			this.isConnecting = true;
-			this.currentStage = 'provisioning';
-			this.pushStep('provisioning');
 			
 			if (blueModule) {
 				blueModule.doProvisioning({
 					ssidValue: this.wifiName,
 					passphraseValue: this.wifiPassword
 				}, (ret) => {
-					this.isConnecting = false;
-					if (ret.success) {
+					console.log('doProvisioning===', ret);
+					
+					// 处理WiFi配置推送状态
+					if (ret.success && ret.msg === 'wifiConfigApplied') {
+						console.log('✅ WiFi配置推送成功');
+						this.provisioningStatus.wifiConfigPushed = true;
+						
+						// 切换到配网阶段，显示状态列表
+						this.currentStage = 'provisioning';
+						this.pushStep('provisioning');
+						
+						// 设置等待配对状态
+						this.provisioningStatus.isWaitingForPairing = true;
+						this.isConnecting = false;
+						
 						uni.showToast({
-							title: '配网成功',
+							title: 'WiFi配置推送成功',
 							icon: 'success'
 						});
-					} else {
-						uni.showToast({
-							title: ret.msg || '配网失败',
-							icon: 'none'
-						});
+						
+						return;
+					}
+					
+					// 处理配网结果状态  此时等待配对状态
+					if(this.provisioningStatus.isWaitingForPairing === true){
+						if (ret.success && ret.msg === 'deviceProvisioningSuccess') {
+							console.log('✅ 配网成功');
+							this.handleProvisioningResult('success', '配网成功');
+							return;
+						}else{
+							console.log('❌ 配网失败：WiFi密码错误');
+							this.handleProvisioningResult('failed', 'WiFi名称或密码错误');
+							return;
+						}
+					}
+					
+					// 处理其他错误情况
+					if (!ret.success) {
+						console.log('❌ 配网过程出错:', ret.msg);
+						this.handleProvisioningResult('failed', ret.msg || '配网失败');
 					}
 				});
 			} else {
+				this.isConnecting = false;
 				uni.showToast({
 					title: '配网插件未找到',
 					icon: 'none'
@@ -737,6 +818,54 @@ export default {
 			}
 		},
 		
+		// 处理配网结果
+		handleProvisioningResult(result, message) {
+			this.provisioningStatus.isWaitingForPairing = false;
+			this.provisioningStatus.pairingResult = result;
+			this.isConnecting = false;
+			
+			if (result === 'success') {
+				this.currentStage = 'provisioningSuccess';
+				uni.showToast({
+					title: message,
+					icon: 'success'
+				});
+				
+				// 3秒后可以返回或执行其他操作
+				setTimeout(() => {
+					// 这里可以跳转到成功页面或返回首页
+					console.log('配网成功，可以执行后续操作');
+				}, 3000);
+			} else {
+				this.currentStage = 'provisioningFailed';
+				// 将错误信息存储到provisioningStatus中
+				this.provisioningStatus.errorMessage = message;
+				uni.showToast({
+					title: message,
+					icon: 'none',
+					duration: 3000
+				});
+			}
+		},
+		// 获取设备ID
+		sendDataToCustomEndPoint() {
+			console.log('sendDataToCustomEndPoint11111');
+			blueModule.sendDataToCustomEndPoint({
+				path: 'device',
+				bytes: [0xFF, 0xF0], //优先级第一
+				hexStr: 'FFF0' //优先级第二
+			}, (ret) => {
+				//扫描回调结果
+				console.log('sendDataToCustomEndPoint===',ret)
+
+			});
+		},
+		// 获取版本信息
+		getVersionInfo() {
+			blueModule.getVersionInfo((ret) => {
+				console.log('获取版本信息ret:',ret)
+			});
+		},
 		// 添加步骤到历史记录
 		pushStep(step) {
 			if (this.stepHistory[this.stepHistory.length - 1] !== step) {
@@ -857,13 +986,13 @@ export default {
 					break;
 					
 				case 'setingPop':
-					// 从设置POP返回到扫描阶段
+					// 从设置POP返回到扫描阶段（隐藏步骤，通常不会被用户触发）
 					console.log('从设置POP返回到扫描');
 					this.goToStep('scanning');
 					break;
 					
 				case 'wifiConfig':
-					// 从WiFi配置返回到扫描阶段
+					// 从WiFi配置返回到扫描阶段（因为POP步骤对用户隐藏）
 					console.log('从WiFi配置返回到扫描');
 					this.goToStep('scanning');
 					break;
@@ -874,12 +1003,38 @@ export default {
 					this.goToStep('wifiConfig');
 					break;
 					
+				case 'provisioningSuccess':
+					// 配网成功，返回到WiFi配置重新配网或退出
+					console.log('配网成功，返回到WiFi配置');
+					this.goToStep('wifiConfig');
+					break;
+					
+				case 'provisioningFailed':
+					// 配网失败，返回到WiFi配置重新尝试
+					console.log('配网失败，返回到WiFi配置重新尝试');
+					this.goToStep('wifiConfig');
+					break;
+					
 				default:
 					// 默认返回到上一页
 					console.log('未知阶段，退出页面');
 					uni.navigateBack();
 					break;
 			}
+		},
+		
+		// 重试配网
+		retryProvisioning() {
+			console.log('重试配网');
+			// 重置状态回到WiFi配置阶段
+			this.provisioningStatus = {
+				wifiConfigPushed: false,
+				isWaitingForPairing: false,
+				pairingResult: null,
+				errorMessage: ''
+			};
+			this.currentStage = 'wifiConfig';
+			this.pushStep('wifiConfig');
 		}
 	}
 }
@@ -935,354 +1090,297 @@ export default {
 
 /* 主要内容 */
 .main-content {
-	padding: calc(var(--status-bar-height) + 100rpx) 40rpx 40rpx;
+	padding: 29.9rpx 29.9rpx 29.9rpx 46.6rpx;
 	min-height: 100vh;
 	box-sizing: border-box;
+	/* 通用样式 */
+	.stage-title {
+		font-size: 44.8rpx;
+		font-weight: 600;
+		color: #303030;
+		text-align: center;
+	}
+	/* 状态列表 */
+	.status-list {
+		margin-top: 97rpx;
+		margin-bottom: 40rpx;
+		padding: 0 46.6rpx;
+		.status-item-wrapper {
+			.status-item {
+				display: flex;
+				align-items: center;
+				.status-icon {
+					width: 48rpx;
+					height: 48rpx;
+					image{
+						width: 44.8rpx;
+						height: 44.8rpx;
+					}
+					.loading-icon {
+						animation: spin 2.5s linear infinite;
+					}
+				}
+				.status-content {
+					margin-left: 9.3rpx;
+					flex: 1;
+					display: flex;
+					align-items: center;
+					position: relative;
+					.status-text {
+						font-size: 29.9rpx;
+						color: #1E1E1E;
+						font-weight: 400;
+					}
+					.status-detail {
+						position: absolute;
+						top: 50rpx;
+						left: 0;
+						font-size: 28rpx;
+						color: #666;
+						line-height: 1.3;
+						margin-bottom: 10rpx;
+					}
+				}
+			}
+			.connection-line {
+				width: 1px;
+				height: 59.7rpx;
+				background: #D9D9D9;
+				margin-left: 20rpx;
+			}
+		}
+	}
+		/* 设备发现弹窗 */
+	.device-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: end;
+		justify-content: center;
+		z-index: 1000;
+		.modal-content {
+			margin-bottom: 48.5rpx;
+			background: #fff;
+			border-radius: 24rpx;
+			padding: 44.8rpx;
+			position: relative;
+			max-width: 550rpx;
+			width: 100%;
+
+			.modal-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				.modal-title {
+					font-size: 29.9rpx;
+					font-weight: 400;
+					color: #1E1E1E;
+				}
+				.close-button {
+					width: 44.8rpx;
+					height: 44.8rpx;
+				}
+			}
+			.device-img {
+				width: 320.9rpx;
+				margin: 29.9rpx 0;
+				margin-left: 50%;
+				transform: translateX(-50%);
+			}
+			.device-name {
+				text-align: center;
+				font-size: 29.9rpx;
+				color: #1E1E1E;
+				font-weight: 400;
+			}
+		
+			.modal-buttons {
+				display: flex;
+				gap: 7.5rpx;
+				margin-top: 29.9rpx;
+				.modal-btn {
+					flex: 1;
+					height: 85.8rpx;
+					border-radius: 50rpx;
+					font-size: 29.9rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: 400;
+				}
+				
+				.cancel-btn {
+					background: #F5F5F5;
+					color: #757575;
+				}
+				
+				.confirm-btn {
+					background: #EBE7FF;
+					color: #1E1E1E;
+				}
+			}
+			
+
+
+
+		}
+		
+
+		
+
+		
+
+	}
 }
 
-/* 通用样式 */
-.stage-title {
-	font-size: 36rpx;
-	font-weight: bold;
-	color: #333;
-	text-align: center;
-	margin-bottom: 60rpx;
+
+
+
+
+
+
+
+
+
+
+.status-default-icon {
+	width: 44.8rpx;
 }
 
-/* 状态列表 */
-.status-list {
-	margin-bottom: 40rpx;
-}
 
-.status-item {
-	display: flex;
-	align-items: center;
-	margin-bottom: 30rpx;
-	padding: 20rpx;
-	background: #fff;
-	border-radius: 16rpx;
-	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-}
-
-.status-item.completed .status-icon {
-	background: #4CAF50;
-	color: #fff;
-}
-
-.status-item.active .status-icon {
-	background: #2196F3;
-	color: #fff;
-}
-
-.status-item.error .status-icon {
-	background: #f44336;
-	color: #fff;
-}
-
-.status-item.error {
-	border-left: 4rpx solid #f44336;
-}
-
-.status-icon {
-	width: 40rpx;
-	height: 40rpx;
-	border-radius: 50%;
-	background: #E0E0E0;
-	color: #999;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-right: 20rpx;
-	font-size: 24rpx;
-	font-weight: bold;
-	flex-shrink: 0;
-}
-
-.loading-icon {
-	width: 20rpx;
-	height: 20rpx;
-	border: 3rpx solid #fff;
-	border-top: 3rpx solid transparent;
-	border-radius: 50%;
-	animation: spin 1s linear infinite;
-}
 
 @keyframes spin {
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
 
-.status-text-container {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-}
 
-.status-text {
-	font-size: 28rpx;
-	color: #333;
-	margin-bottom: 4rpx;
-}
 
-.status-detail {
-	font-size: 24rpx;
-	color: #666;
-	line-height: 1.3;
-}
 
-/* 设备发现弹窗 */
-.device-modal {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
-}
-
-.modal-content {
-	background: #fff;
-	border-radius: 24rpx;
-	padding: 40rpx;
-	margin: 40rpx;
-	position: relative;
-	max-width: 500rpx;
-	width: 100%;
-}
-
-.modal-title {
-	font-size: 32rpx;
-	font-weight: bold;
-	text-align: center;
-	margin-bottom: 40rpx;
-	color: #333;
-}
-
-.close-button {
-	position: absolute;
-	top: 20rpx;
-	right: 20rpx;
-	width: 40rpx;
-	height: 40rpx;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 32rpx;
-	color: #999;
-}
-
-.device-info {
-	text-align: center;
-	margin-bottom: 40rpx;
-}
-
-.device-avatar {
-	width: 120rpx;
-	height: 120rpx;
-	margin: 0 auto 20rpx;
-	border-radius: 50%;
-	overflow: hidden;
-	background: #f0f0f0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.device-emoji {
-	font-size: 60rpx;
-	line-height: 1;
-}
-
-.device-name {
-	font-size: 28rpx;
-	color: #333;
-	font-weight: bold;
-}
-
-.modal-buttons {
-	display: flex;
-	gap: 20rpx;
-}
-
-.modal-btn {
-	flex: 1;
-	height: 80rpx;
-	border-radius: 16rpx;
-	font-size: 28rpx;
-	border: none;
-	color: #fff;
-}
-
-.cancel-btn {
-	background: #E0E0E0;
-	color: #666;
-}
-
-.confirm-btn {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
 
 /* WiFi配置阶段 */
-.wifi-icon-container {
-	text-align: center;
-	margin-bottom: 60rpx;
-}
-
-.wifi-icon {
-	display: inline-block;
-	position: relative;
-	width: 120rpx;
-	height: 80rpx;
-}
-
-.wifi-signal {
-	position: absolute;
-	bottom: 0;
-	left: 50%;
+.wifi-icon{
+	margin-top: 100rpx;
+	width: 304.1rpx;
+	margin-left: 50%;
 	transform: translateX(-50%);
-	border: 6rpx solid #C5A3FF;
-	border-bottom: none;
-	border-radius: 120rpx 120rpx 0 0;
-}
-
-.wifi-signal:nth-child(1) {
-	width: 100rpx;
-	height: 50rpx;
-}
-
-.wifi-signal:nth-child(2) {
-	width: 70rpx;
-	height: 35rpx;
-}
-
-.wifi-signal:nth-child(3) {
-	width: 40rpx;
-	height: 20rpx;
-}
-
-.wifi-dot {
-	position: absolute;
-	bottom: 10rpx;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 12rpx;
-	height: 12rpx;
-	background: #C5A3FF;
-	border-radius: 50%;
 }
 
 /* 输入区域 */
 .wifi-input-section, .password-input-section {
-	margin-bottom: 40rpx;
+	margin-bottom: 37.3rpx;
 }
 
 .input-label {
-	font-size: 28rpx;
-	color: #666;
-	margin-bottom: 20rpx;
-	display: block;
+	font-size: 29.9rpx;
+	color: #303030;
+	margin-bottom: 37.3rpx;
 }
 
+
 .wifi-input-container, .password-input-container {
+	border: 1rpx solid #D9D9D9;
 	background: #F5F5F5;
-	border-radius: 16rpx;
+	border-radius: 29.9rpx;
 	padding: 0 30rpx;
 	display: flex;
 	align-items: center;
 }
 
-.wifi-input, .password-input {
+.wifi-input{
 	flex: 1;
-	height: 80rpx;
-	font-size: 28rpx;
+	height: 104.5rpx;
+	font-size: 29.9rpx;
 	background: transparent;
 	border: none;
+	color: #303030;
+}
+
+.password-input {
+	flex: 1;
+	height: 134.3rpx;
+	font-size: 29.9rpx;
+	background: transparent;
+	border: none;
+	color: #303030;
 }
 
 .password-toggle {
-	padding: 10rpx;
+	width: 44.8rpx;
 }
 
-.password-icon {
-	font-size: 32rpx;
-	color: #999;
-}
+
 
 /* WiFi列表 */
 .wifi-list-section {
 	margin-bottom: 40rpx;
+	.wifi-list-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 37.3rpx;
+		.list-title {
+			font-size: 29.9rpx;
+			color: #1E1E1E;
+		}
+		.refresh-button {
+			width: 37.3rpx;
+		}
+	}
+	.wifi-list {
+		background: #fff;
+		border-radius: 16rpx;
+		padding: 14.9rpx;
+		background-color: #F5F5F5;
+		border: 1px solid #D9D9D9;
+		border-radius: 29.9rpx;
+		.wifi-item {
+			padding: 14.9rpx;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			.wifi-name {
+				font-size: 29.9rpx;
+				color: #1E1E1E;
+			}
+			
+			.wifi-item-icon {
+				width: 44.8rpx;
+			}
+		}
+	}
+	
+
 }
 
-.wifi-list-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 20rpx;
-}
 
-.list-title {
-	font-size: 28rpx;
-	color: #666;
-}
 
-.refresh-button {
-	padding: 10rpx;
-}
 
-.refresh-icon {
-	font-size: 28rpx;
-	color: #666;
-}
 
-.wifi-list {
-	background: #fff;
-	border-radius: 16rpx;
-	overflow: hidden;
-}
 
-.wifi-item {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 30rpx;
-	border-bottom: 1rpx solid #F0F0F0;
-}
 
-.wifi-item:last-child {
-	border-bottom: none;
-}
 
-.wifi-name {
-	font-size: 28rpx;
-	color: #333;
-}
 
-.wifi-signal-strength {
-	color: #666;
-}
-
-.signal-icon {
-	font-size: 24rpx;
-}
 
 /* 连接按钮 */
 .connect-wifi-btn {
-	width: 100%;
-	height: 80rpx;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	position: fixed;
+	bottom: 22.4rpx;
+	left: 22.4rpx;
+	width: calc(100% - 44.8rpx);
+	height: 85.8rpx;
+	background: #6D5BE3;
 	color: #fff;
 	border: none;
-	border-radius: 16rpx;
-	font-size: 32rpx;
-	font-weight: bold;
-}
-
-.connect-wifi-btn:disabled {
-	background: #E0E0E0;
-	color: #999;
+	border-radius: 74.6rpx;
+	font-size: 29.9rpx;
+	font-weight: 400;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 </style> 

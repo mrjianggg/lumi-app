@@ -52,6 +52,7 @@
 				<image src="/static/icon/menu-arrow.svg" mode="widthFix"></image>
 			</view>
 		</view>
+
 	</view>
 </template>
 
@@ -95,9 +96,9 @@ export default {
 
 <style scoped lang="scss"> 
 .personal-container {
-	min-height: 100vh;
+	height: 100%;
 	background: #FFFFFF;
-	padding: 111.9rpx 39.2rpx 180rpx 39.2rpx;
+	padding: 111.9rpx 39.2rpx 80rpx 39.2rpx;
 }
 
 .personal-header {

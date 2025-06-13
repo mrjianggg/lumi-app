@@ -132,7 +132,20 @@ export default {
   width: 100%;
   height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  
+  /* 隐藏滚动条 - 兼容各种浏览器 */
+  /* Chrome, Safari, Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* IE, Edge */
+  -ms-overflow-style: none;
+  
+  /* Firefox */
+  scrollbar-width: none;
 }
 
 .tab-page {

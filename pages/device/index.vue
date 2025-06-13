@@ -64,9 +64,9 @@
 
 
 						<!-- 行为引导按钮 -->
-						<button class="guide-button" @click="setBehavior">
+						<view class="guide-button" @click="setBehavior">
 							行为引导 <image class="guide-button-icon" src="/static/icon/xwyd.svg"></image>
-						</button>
+						</view>
 
 						<!-- 内容推荐 -->
 						<view class="content-section">
