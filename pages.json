@@ -138,6 +138,17 @@
 				"titleNView": false
 			}
 		}
+	},
+	{
+		"path" : "pages/device/recommend",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
 	}],
 	"globalStyle": {
 		"navigationBarTextStyle": "white",

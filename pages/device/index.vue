@@ -76,14 +76,14 @@
 								<view
 									:class="['content-item', playContentIndex === contentIndex ? 'content-item-play' : '']"
 									@click="playContent(contentIndex)">
-									<view>
-										{{content.title}}
+									<view class="content-item-left">
+										<!-- <audio-lines-icon v-if="playContentIndex === contentIndex" :color="currentColorPair.icon" /> -->
+										<view class="content-item-left-text">
+											{{content.title}}
+										</view>
 									</view>
-									<view>
-										<image class="content-item-bt" src="/static/icon/item-pause.svg"
-											v-if="playContentIndex === contentIndex"></image>
-										<image class="content-item-bt" src="/static/icon/item-play.svg" v-else></image>
-									</view>
+									<image class="content-item-bt" src="/static/icon/Chevron-right.svg"></image>
+
 								</view>
 							</view>
 						</view>
@@ -112,12 +112,26 @@
 </template>
 
 <script>
+	import AudioLinesIcon from '@/components/audio-lines-icon.vue'
 	export default {
+		components: {
+			AudioLinesIcon
+		},
 		data() {
 			return {
 				playContentIndex: -1,
 				currentDeviceIndex: 0,
 				swiperHeight: 'auto',
+				// 颜色配对数组
+				colorPairs: [
+					{ background: '#FFE8A3', icon: '#FF9B21' },
+					{ background: '#CFF7D3', icon: '#21B200' },
+					{ background: '#FDD3D0', icon: '#FF3F21' },
+					{ background: '#CFE9FF', icon: '#209BFF' },
+					{ background: '#EBE7FF', icon: '#6D5BE3' }
+				],
+				// 当前选中内容的颜色配对
+				currentColorPair: { background: '#FFE8A3', icon: '#FF9B21' },
 				deviceList: [{
 						id: 1,
 						name: 'Namyvera',
@@ -262,10 +276,16 @@
 
 			playContent(contentIndex) {
 				if (this.playContentIndex === contentIndex) {
-					this.playContentIndex = -1;
+					// this.playContentIndex = -1;
 				} else {
 					this.playContentIndex = contentIndex;
+					// 随机选择一个颜色配对
+					const randomIndex = Math.floor(Math.random() * this.colorPairs.length);
+					this.currentColorPair = this.colorPairs[randomIndex];
 				}
+				uni.navigateTo({
+					url: '/pages/device/recommend'
+				})
 			},
 
 			// 切换到指定设备
@@ -574,8 +594,7 @@
 		}
 
 		.content-item-play {
-			background: #FFE8A3;
-			border: 1px solid #FFE8A3 !important;
+			/* 背景色和边框色现在通过动态样式设置 */
 		}
 
 		.content-item {
@@ -594,6 +613,14 @@
 			.content-item-bt {
 				width: 44.8rpx;
 				height: 44.8rpx;
+			}
+			.content-item-left{
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				.content-item-left-text{
+					margin-left: 7.5rpx;
+				}
 			}
 		}
 	}
