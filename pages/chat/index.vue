@@ -26,14 +26,8 @@
 		<view v-if="showDeviceSelector" class="mask" @click="showDeviceSelector = false"></view>
 		
 		<!-- 聊天记录列表 -->
-		<scroll-view 
-			class="chat-list" 
-			scroll-y="true" 
-			:refresher-enabled="true"
-			:refresher-triggered="refresherTriggered"
-			@refresherrefresh="onRefresh"
-			:lower-threshold="50"
-		>
+		<z-paging ref="paging" refresher-only @onRefresh="onRefresh" class="chat-list" >
+			<!-- 页面内容 -->
 			<view v-for="session in groupedChatList" :key="session.sessionId" class="session-group">
 				<!-- 会话时间分隔 -->
 				<view class="session-divider">
@@ -58,16 +52,7 @@
 					</view>
 				</view>
 			</view>
-			
-			<!-- 加载更多提示 -->
-			<view v-if="loading" class="loading-tip">
-				<text>加载中...</text>
-			</view>
-			
-			<view v-if="noMore" class="no-more-tip">
-				<text>没有更多数据了</text>
-			</view>
-		</scroll-view>
+		</z-paging>
 	</view>
 </template>
 
@@ -143,7 +128,6 @@ export default {
 		// 下拉刷新 - 加载最新数据
 		async onRefresh() {
 			console.log('onRefresh1111');
-			this.refresherTriggered = true
 			
 			try {
 				// 模拟获取最新数据
@@ -180,7 +164,7 @@ export default {
 					icon: 'error'
 				})
 			} finally {
-				this.refresherTriggered = false
+				this.$refs.paging.complete();
 			}
 		},
 		
@@ -442,6 +426,8 @@ export default {
 	.chat-list {
 		flex: 1;
 		padding: 52rpx 52rpx 152rpx 52rpx;
+		margin-top: 100rpx;
+
 		.session-group {
 			margin-bottom: 40rpx;
 			.session-divider {
