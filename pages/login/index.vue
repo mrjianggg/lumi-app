@@ -93,7 +93,8 @@
 
 <script>
 	import CountryModal from '@/components/country-modal.vue'
-	
+	import http from '@/utils/request.js'
+
 	export default {
 		components: {
 			CountryModal
@@ -131,7 +132,7 @@
 			},
 			
 			// 发送验证码
-			sendSMS() {
+			async sendSMS() {
 				if (this.countdown > 0) return;
 				
 				if (!this.phoneNumber || this.phoneNumber.length < 7) {
@@ -141,15 +142,19 @@
 					});
 					return;
 				}
-				
-				// 模拟发送验证码
-				uni.showToast({
-					title: '验证码已发送',
-					icon: 'success'
-				});
-				
-				// 开始倒计时
-				this.startCountdown();
+				// 发送验证码
+				await http.post('/lumi/sms/send', { mobile: this.phoneNumber }).then(res => {
+					if(res.code === 0){
+						// 开始倒计时
+						this.startCountdown();
+						uni.showToast({
+							title: '验证码已发送',
+							icon: 'success'
+						});
+					}
+				}).catch(err => {
+					console.error('发送验证码失败：', err.message)
+				})
 			},
 			
 			// 开始倒计时
@@ -165,7 +170,7 @@
 			},
 			
 			// 登录
-			login() {
+			 async login() {
 				if (!this.phoneNumber || this.phoneNumber.length < 7) {
 					uni.showToast({
 						title: '请输入正确的手机号',
@@ -174,9 +179,9 @@
 					return;
 				}
 				
-				if (!this.verificationCode || this.verificationCode.length !== 6) {
+				if (!this.verificationCode || this.verificationCode.length !== 4) {
 					uni.showToast({
-						title: '请输入6位验证码',
+						title: '请输入4位验证码',
 						icon: 'none'
 					});
 					return;
@@ -186,21 +191,23 @@
 				uni.showLoading({
 					title: '登录中...'
 				});
-				
-				setTimeout(() => {
-					uni.hideLoading();
-					uni.showToast({
-						title: '登录成功',
-						icon: 'success'
-					});
-					
-					// 跳转到首页
-					setTimeout(() => {
-						uni.reLaunch({
-							url: '/pages/tabbar-container/index?tab=0'
+
+				// 验证码登录
+				await http.post('/lumi/sms/login', { mobile: this.phoneNumber, smsCode: this.verificationCode }).then(res => {
+					console.log('lumi/sms/login===', res);
+					if(res.code === 0){
+						uni.hideLoading();
+						uni.setStorageSync('token', res.data.token);
+						uni.showToast({
+							title: '登录成功',
+							icon: 'success'
 						});
-					}, 1500);
-				}, 2000);
+						// 跳转到首页
+						uni.reLaunch({ url: '/' });
+					}
+				}).catch(err => {
+					console.error('发送验证码失败：', err.message)
+				})
 			},
 			
 			// Google登录
