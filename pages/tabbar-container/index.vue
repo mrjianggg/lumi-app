@@ -2,21 +2,21 @@
   <view class="tabbar-container">
     <!-- 动态显示当前选中的页面组件 -->
     <view 
-      v-show="currentTabIndex === 0" 
+      v-if="currentTabIndex === 0" 
       class="tab-page"
     >
       <device-page ref="devicePage" />
     </view>
     
     <view 
-      v-show="currentTabIndex === 1" 
+      v-if="currentTabIndex === 1" 
       class="tab-page"
     >
       <chat-page ref="chatPage" />
     </view>
     
     <view 
-      v-show="currentTabIndex === 2" 
+      v-if="currentTabIndex === 2" 
       class="tab-page"
     >
       <personal-page ref="personalPage" />

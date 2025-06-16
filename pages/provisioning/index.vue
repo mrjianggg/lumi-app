@@ -169,6 +169,8 @@
 
 <script>
 var blueModule = uni.requireNativePlugin("XM-EspIdfModule")
+import http from '@/utils/request.js'
+import { Buffer } from 'buffer';
 
 export default {
 	data() {
@@ -236,6 +238,17 @@ export default {
 		if (this.scanTimeout) {
 			clearTimeout(this.scanTimeout);
 			this.scanTimeout = null;
+		}
+	},
+	watch: {
+		foundDevice: {
+			handler(newVal) {
+				console.log('foundDevice4444===',newVal);
+				if(newVal.sn){
+					this.bindDevice();
+				}
+			},
+			deep: true
 		}
 	},
 	methods: {
@@ -599,7 +612,8 @@ export default {
 							this.deviceList.push({
 								name: ret.data.name,
 								deviceId: ret.data.deviceId,
-								serviceUuid: ret.data.serviceUuid || ret.data.advertisServiceUUIDs[0]
+								serviceUuid: '021A9004-0382-4AEA-BFF4-6B3F1C5ADFB4'
+								// serviceUuid: ret.data.serviceUuid || ret.data.advertisServiceUUIDs[0]
 							});
 							
 							// 如果是第一个设备，显示弹窗
@@ -640,33 +654,80 @@ export default {
 				pop: 'abcd1234'
 			}, (ret) => {
 				console.log('POP设置结果: ' + JSON.stringify(ret));
-				setTimeout(() => {
-					if (ret.success) {
-						this.setPopActive = false;
-						// 自动扫描WiFi网络 - 先检查权限
-						this.currentStage = 'wifiConfig';
-						this.provisioningPage = 1;
-						this.pushStep('wifiConfig');
-						this.scanWifiNetworks();
-					} else {
-						// 设置POP失败
-						uni.showToast({
-							title: '设置安全密钥 (POP)失败',
-							icon: 'success'
-						});
-						this.setPopActive = true;
-					}
-				}, 2000);
+				if (ret.success) {
+				} else {
+					// 设置POP失败
+					uni.showToast({
+						title: '设置安全密钥 (POP)失败',
+						icon: 'success'
+					});
+					this.setPopActive = true;
+				}
 			});
+		},
+		// 后端绑定设备
+		async bindDevice(){
+			console.log('this.foundDevice3333===',this.foundDevice);
+			if(!this.foundDevice.sn){
+				uni.showToast({
+					title: '设备SN获取失败，请重新尝试',
+					icon: 'none'
+				});
+				return;
+			}
+			await http.get(`/device/bound/${this.foundDevice.sn}`).then(async res => {
+				console.log('/device/bound/{sn}===', res);
+				if(res.code === 0){
+					if(res.data === true){
+						uni.showToast({
+							title: '设备已绑定',
+							icon: 'none'
+						});
+						return;
+					}else{
+						await http.post('/device/register', {
+							macAddress: this.foundDevice.sn
+						}).then(res => {
+							console.log('lumi/device/register===', res);
+							if(res.code === 0){
+								if(this.foundDevice.name !== 'Lumi_Device'){
+									uni.showToast({
+										title: '绑定成功',
+										icon: 'success'
+									});
+									// 返回首页
+									uni.switchTab({
+										url: '/pages/index/index'
+									});
+								}else{
+									this.setPopActive = false;
+									// 自动扫描WiFi网络 - 先检查权限
+									this.currentStage = 'wifiConfig';
+									this.provisioningPage = 1;
+									this.pushStep('wifiConfig');
+									this.scanWifiNetworks();
+								}
+
+
+							}
+
+						}).catch(err => {
+							console.error('绑定设备失败：', err.message)
+						})
+					}
+				}
+			}).catch(err => {
+				console.error('绑定设备报错：',err)
+			})
+
+
+
 		},
 
 		// 连接设备
 		connectDevice() {
 			console.log('this.foundDevice=',this.foundDevice);
 			blueModule.connectDevice({
-				/**
-				 * {"success":true,"msg":"onLeScan","data":{"mBleAddress":"1AF92E22-C653-272E-06AF-46D92E4B8963","mDeviceType":2,"mBleName":"Fuwinda 6199"}}
-				 */
 				mac: this.foundDevice.deviceId, //mac地址
 				serviceUuid: this.foundDevice.serviceUuid
 			}, (ret) => {
@@ -676,7 +737,12 @@ export default {
 					// 设置POP（后台执行，用户不可见）
 					this.currentStage = 'setingPop';
 					this.pushStep('setingPop');
-					this.setProofOfPossession();
+					// 发送数据到自定义端点 获取SN
+					this.sendDataToCustomEndPoint();
+					if(this.foundDevice.name !== 'Lumi_Device'){ // 'Lumi_Device'的设备不用设置POP
+						// 设置POP
+						this.setProofOfPossession();
+					}
 				}
 			});
 
@@ -931,7 +997,12 @@ export default {
 			}, (ret) => {
 				//扫描回调结果
 				console.log('sendDataToCustomEndPoint===',ret)
-
+				const decodedString = Buffer.from(ret.data, 'hex').toString('utf8'); // 先解码 hex
+				const deviceInfo = JSON.parse(decodedString);
+				console.log('deviceInfo===',deviceInfo);
+				this.foundDevice.sn = deviceInfo.deviceId;
+				console.log('this.foundDevice.sn===',this.foundDevice.sn);
+				this.foundDevice.deviceType = deviceInfo.deviceType;
 			});
 		},
 		// 获取版本信息

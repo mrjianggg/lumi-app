@@ -34,6 +34,8 @@
 		methods: {
 			// 处理兑换
 			handleExchange() {
+				uni.reLaunch({ url: '/pages/index/index' });
+
 				if (!this.exchangeCode.trim()) {
 					uni.showToast({
 						title: '请输入兑换码',

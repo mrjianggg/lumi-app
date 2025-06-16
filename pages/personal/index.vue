@@ -57,13 +57,25 @@
 </template>
 
 <script>
+import http from '@/utils/request.js'
+
 export default {
 	data() {
 		return {
 			
 		}
 	},
+	mounted() {
+		this.getUserInfo();
+	},
 	methods: {
+		async getUserInfo() {
+			await http.get('/user/info').then(res => {
+				console.log('/user/info===', res);
+			}).catch(err => {
+				console.error('获取用户信息失败：', err.message)
+			})
+		},
 		showComingSoon() {
 			uni.showToast({
 				title: '功能即将开放',

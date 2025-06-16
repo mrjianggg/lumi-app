@@ -4,7 +4,7 @@
  */
 
 // 基础配置
-const BASE_URL = 'http://101.126.145.3:8002'
+const BASE_URL = 'http://101.126.145.3:8002/lumi'
 const TIMEOUT = 60000 // 60秒超时
 
 /**
@@ -44,6 +44,7 @@ class Request {
       options.url = this.baseURL + options.url
     }
 
+    console.log('token===', token)
     console.log('请求地址：', options.url)
     console.log('请求参数：', options.data)
     

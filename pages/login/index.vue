@@ -143,7 +143,7 @@
 					return;
 				}
 				// 发送验证码
-				await http.post('/lumi/sms/send', { mobile: this.phoneNumber }).then(res => {
+				await http.post('/sms/send', { mobile: this.phoneNumber }).then(res => {
 					if(res.code === 0){
 						// 开始倒计时
 						this.startCountdown();
@@ -193,7 +193,7 @@
 				});
 
 				// 验证码登录
-				await http.post('/lumi/sms/login', { mobile: this.phoneNumber, smsCode: this.verificationCode }).then(res => {
+				await http.post('/sms/login', { mobile: this.phoneNumber, smsCode: this.verificationCode }).then(res => {
 					console.log('lumi/sms/login===', res);
 					if(res.code === 0){
 						uni.hideLoading();
