@@ -4,7 +4,8 @@
  */
 
 // 基础配置
-const BASE_URL = 'http://101.126.145.3:8002/lumi'
+import { BASE_URL } from '@/components/filters.js'
+
 const TIMEOUT = 60000 // 60秒超时
 
 /**
@@ -12,7 +13,7 @@ const TIMEOUT = 60000 // 60秒超时
  */
 class Request {
   constructor() {
-    this.baseURL = BASE_URL
+    this.baseURL = BASE_URL + '/lumi'
     this.timeout = TIMEOUT
     this.header = {
       'Content-Type': 'application/json;charset=UTF-8'
@@ -31,7 +32,7 @@ class Request {
     })
 
     // 添加token到请求头（如果存在）
-    const token = uni.getStorageSync('token')
+    const token = uni.getStorageSync('token') || '16d6cf66210c23500db14933645d5599'  // 测试后删除
     if (token) {
       options.header = {
         ...options.header,
@@ -68,6 +69,11 @@ class Request {
       // 业务状态码检查
       if (data.code === 0) {
         return Promise.resolve(data)
+      } else if(data.code === 401){
+        // 未授权，跳转登录
+        uni.navigateTo({
+          url: '/pages/login/index'
+        })
       } else {
         // 业务错误
         const errorMsg = data.message || data.msg || data.errMsg || '请求失败'
@@ -255,10 +261,11 @@ class Request {
           if (response.statusCode === 200) {
             try {
               const data = JSON.parse(response.data)
-              if (data.code === 200 || data.success === true) {
+              // 适配不同的成功状态码格式
+              if (data.code === 0 || data.code === 200 || data.success === true) {
                 resolve(data)
               } else {
-                const errorMsg = data.message || data.msg || '上传失败'
+                const errorMsg = data.message || data.msg || data.errMsg || '上传失败'
                 uni.showToast({
                   title: errorMsg,
                   icon: 'none'
@@ -266,10 +273,16 @@ class Request {
                 reject(new Error(errorMsg))
               }
             } catch (e) {
+              console.error('响应数据解析失败:', e)
               reject(new Error('响应数据解析失败'))
             }
           } else {
-            reject(new Error(`上传失败(${response.statusCode})`))
+            const errorMsg = `上传失败(HTTP ${response.statusCode})`
+            uni.showToast({
+              title: errorMsg,
+              icon: 'none'
+            })
+            reject(new Error(errorMsg))
           }
         },
         fail: (error) => {

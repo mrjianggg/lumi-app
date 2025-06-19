@@ -8,11 +8,11 @@
 				</view>
 				<view class="device-info-right">
 					<view class="device-info-right-name">
-						<text>{{ deviceName }}</text>
+						<text>{{ deviceInfo.alias || deviceInfo.macAddress }}</text>
 						<image @click="editDeviceName" src="/static/icon/Edit_light.svg" mode="widthFix"></image>
 					</view>
 					<view class="device-info-right-id">
-						<text>SN: jdi2hddi89ghja</text>
+						<text>SN: {{ deviceInfo.macAddress }}</text>
 					</view>
 				</view>
 			</view>
@@ -48,7 +48,7 @@
 				<view class="modal-title">设备名称</view>
 				<input 
 					class="modal-input" 
-					v-model="editingDeviceName" 
+					v-model="deviceInfo.alias" 
 					placeholder="请输入设备名称"
 					maxlength="20"
 					:focus="showEditModal"
@@ -63,23 +63,28 @@
 </template>
 
 <script>
+	import http from '@/utils/request.js'
 	export default {
 		data() {
 			return {
-				voiceValue: 50,
+				voiceValue: 0,
 				showVoiceValue: 0,
 				hideThumb: false,
 				sliderChangingValue: 0,
 				showEditModal: false,
-				deviceName: '设备名称11',
-				editingDeviceName: ''
+				deviceInfo: {},
 			}
 		},
 		watch: {
 
 		},
 		onLoad() {
-			this.sliderChangingValue = this.voiceValue;
+
+		},
+		mounted() {
+			this.deviceInfo = uni.getStorageSync('currentDevice');
+			this.sliderChangingValue = this.voiceValue = this.deviceInfo.volumeLevel;
+			console.log('deviceInfo===',this.deviceInfo);
 		},
 		methods: {
 			// TabBar切换事件处理
@@ -102,18 +107,38 @@
 				this.voiceValue = e.detail.value;
 				this.sliderChangingValue = e.detail.value;
             	console.log('value 发生变化：' + e.detail.value)
+				uni.showLoading({
+					title: '设置中...'
+				})
+				http.put('/device/volume/' + this.deviceInfo.id, {
+					volumeLevel: e.detail.value
+				}).then(res => {
+					uni.hideLoading();
+					if(res.code === 0){
+						this.deviceInfo.volumeLevel = e.detail.value;
+						uni.setStorageSync('currentDevice', this.deviceInfo);
+						uni.showToast({
+							title: '设置成功',
+							icon: 'success'
+						})
+					}else{
+						uni.showToast({
+							title: res.message,
+							icon: 'none'
+						})
+					}
+				})
         	},
 			sliderChanging(e) {
 				this.sliderChangingValue = e.detail.value;
 				this.hideThumb = e.detail.value < 20;
 			},
 			editDeviceName() {
-				this.editingDeviceName = this.deviceName;
 				this.showEditModal = true;
 			},
 			toProvisioning() {
 				uni.navigateTo({
-					url: '/pages/provisioning/index'
+					url: '/pages/provisioning/index?macAddress=' + this.deviceInfo.macAddress
 				})
 			},
 			deleteDevice() {
@@ -122,9 +147,24 @@
 					content: '确定删除该设备吗？',
 					success: (res) => {
 						if (res.confirm) {
-							uni.showToast({
-								title: '删除成功',
-								icon: 'success'
+							http.post('/device/unbind', {
+								deviceId: this.deviceInfo.id
+							}).then(res => {
+								if(res.code === 0){
+									uni.showToast({
+										title: '删除成功',
+										icon: 'success'
+									})
+									// 返回到TabBar容器的设备页面
+									uni.reLaunch({
+										url: '/pages/tabbar-container/index?tab=0'
+									})
+								}else{
+									uni.showToast({
+										title: res.message,
+										icon: 'none'
+									})
+								}
 							})
 						}
 					}
@@ -134,7 +174,7 @@
 				this.showEditModal = false;
 			},
 			confirmEdit() {
-				if (this.editingDeviceName === '') {
+				if (!this.deviceInfo.alias) {
 					uni.showToast({
 						title: '请输入设备名称',
 						position: 'top',
@@ -142,8 +182,23 @@
 					})
 					return;
 				}
-				this.deviceName = this.editingDeviceName;
-				this.showEditModal = false;
+				http.put('/device/alias/' + this.deviceInfo.id, {
+					alias: this.deviceInfo.alias
+				}).then(res => {
+					if(res.code === 0){
+						uni.setStorageSync('currentDevice', this.deviceInfo);
+						this.showEditModal = false;
+						uni.showToast({
+							title: '设置成功',
+							icon: 'success'
+						})
+					}else{
+						uni.showToast({
+							title: res.message,
+							icon: 'none'
+						})
+					}
+				})
 			}
 		}
 	}

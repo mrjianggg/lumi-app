@@ -3,7 +3,7 @@
 		<head-return :toPage="2" title="个人信息"></head-return>
 		<view class="page-content">
 			<view class="profile-box" @click="uploadAvatar">
-				<image :src="BASE_URL + userInfo.avatar" mode="aspectFill" class="profile-box-aver"></image>
+				<image :src="avatarUrl" mode="aspectFill" class="profile-box-aver"></image>
 				<image src="/static/icon/camera.svg" mode="widthFix" class="profile-box-camera"></image>
 			</view>
 			<view class="user-name">
@@ -28,20 +28,16 @@
 
 <script>
 	import http from '@/utils/request.js'
-	import { BASE_URL } from '@/components/filters.js'
 	export default {
 		data() {
 			return {
 				avatarUrl: '/static/img/aver.png',
-				BASE_URL,
 				userInfo: {}
 			}
 		},
 		mounted() {
 			this.userInfo = uni.getStorageSync('userInfo');
 			console.log('userInfo===',this.userInfo);
-			console.log('BASE_URL + userInfo.avatar==',this.BASE_URL + this.userInfo.avatar);
-		
 		},
 		methods: {
 			saveUserInfo() {
@@ -76,10 +72,58 @@
 					sourceType: ['album', 'camera'], // 可以从相册选择或拍照
 					success: (res) => {
 						const tempFilePath = res.tempFilePaths[0];
-						console.log('选择的图片路径:', tempFilePath);
+						// 显示加载提示
+						uni.showLoading({
+							title: '上传中...',
+							mask: true
+						});
+						console.log('tempFilePath===',tempFilePath);
+						setTimeout(() => {
+							// 更新头像显示
+							this.avatarUrl = tempFilePath;
+							
+							uni.hideLoading();
+							uni.showToast({
+								title: '头像更新成功',
+								icon: 'success'
+							});
+						}, 1000);
 						
-						// 调用真实的上传接口
-						this.uploadAvatarToServer(tempFilePath);
+						// 实际项目中的上传代码示例（取消注释并修改上传地址）
+						/*
+						uni.uploadFile({
+							url: 'your-upload-api-url', // 替换为你的上传接口地址
+							filePath: tempFilePath,
+							name: 'avatar',
+							header: {
+								// 添加必要的请求头，如token等
+							},
+							success: (uploadRes) => {
+								uni.hideLoading();
+								const data = JSON.parse(uploadRes.data);
+								if (data.code === 200) {
+									this.avatarUrl = data.avatarUrl; // 使用服务器返回的图片地址
+									uni.showToast({
+										title: '头像更新成功',
+										icon: 'success'
+									});
+								} else {
+									uni.showToast({
+										title: '上传失败',
+										icon: 'none'
+									});
+								}
+							},
+							fail: (error) => {
+								uni.hideLoading();
+								uni.showToast({
+									title: '上传失败',
+									icon: 'none'
+								});
+								console.error('上传失败:', error);
+							}
+						});
+						*/
 					},
 					fail: (error) => {
 						uni.showToast({
@@ -89,39 +133,6 @@
 						console.error('选择图片失败:', error);
 					}
 				});
-			},
-			
-			// 上传头像到服务器
-			async uploadAvatarToServer(filePath) {
-				try {
-					const response = await http.upload('/user/avatar', filePath, 'file');
-					console.log('头像上传成功:', response);
-					if(response.code === 0){
-						// 根据接口返回的数据结构更新头像
-						if (response.data && response.data.avatarUrl) {
-							// 更新本地存储的用户信息
-							this.userInfo.avatarUrl = response.data.avatarUrl;
-							uni.setStorageSync('userInfo', this.userInfo);
-						}
-						
-						uni.showToast({
-							title: '头像更新成功',
-							icon: 'success'
-						});
-					}else{
-						uni.showToast({
-							title: response.msg,
-							icon: 'none'
-						});
-					}
-
-				} catch (error) {
-					console.error('头像上传失败:', error);
-					uni.showToast({
-						title: '上传失败，请重试',
-						icon: 'none'
-					});
-				}
 			}
 		}
 	}

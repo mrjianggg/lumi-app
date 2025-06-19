@@ -7,10 +7,10 @@
 					<image src="/static/img/deviceImg.png" mode="widthFix" class="device-list-item-img"></image>
 					<view class="device-list-item-info">
 						<view class="device-list-item-info-name">
-							<text>{{ item.name }}</text>
+							<text>{{ item.alias || item.macAddress }}</text>
 						</view>
 						<view class="device-list-item-info-deviceId">
-							<text>SN:{{ item.deviceId }}</text>
+							<text>SN:{{ item.macAddress }}</text>
 						</view>
 					</view>
 				</view>
@@ -22,30 +22,25 @@
 </template>
 
 <script>
+	import http from '@/utils/request.js'
 	export default {
 		data() {
 			return {
-				deviceList: [
-					{
-						id: 1,
-						name: '设备1',
-						deviceId: 'jdi2hddi89ghja'
-					},
-					{
-						id: 2,
-						name: '设备2',
-						deviceId: 'jdi2hddi89ghaa'
-					},
-					{
-						id: 3,
-						name: '设备3',
-						deviceId: 'jdi2hddi89ghbb'
-					}
-				]
+				deviceList: []
 			}
 		},
+		mounted() {
+			this.getDeviceList();
+		},
 		methods: {
-
+			getDeviceList() {
+				http.get('/device/bind/list').then(res => {
+					console.log('/device/bind/list===', res);
+					if(res.code === 0 && res.data && res.data.length > 0){
+						this.deviceList = res.data;
+					}
+				})
+			}
 		}
 	}
 </script>

@@ -49,10 +49,7 @@
 					{ background: '#EBE7FF', icon: '#6D5BE3' }
 				],
                 fId: '',
-                fName: '',
-				currentDevice: null,
-				playingTaskId: null, // 当前播放任务ID
-				statusCheckTimer: null // 状态检查定时器
+                fName: ''
 			}
 		},
 		onLoad() {
@@ -65,19 +62,10 @@
         mounted() {
             this.fId = this.$route.query.id;
             this.fName = decodeURIComponent(this.$route.query.name);
-            // 获取当前设备信息
-            this.currentDevice = uni.getStorageSync('currentDevice');
-            console.log('当前设备信息:', this.currentDevice);
             if(this.fId){
                 this.getRecommend();
             }
-
         },
-		
-		onUnload() {
-			// 页面卸载时清除定时器
-			this.clearStatusTimer();
-		},
 		methods: {
             getRecommend() {
                 this.contentList = [];
@@ -107,163 +95,18 @@
 					});
 				}
 			},
-			
-			
-			// 播放内容
-			async playContent(contentIndex, content) {
-				// 检查设备信息
-				if (!this.currentDevice) {
-					uni.showToast({
-						title: '请先选择设备',
-						icon: 'none'
-					});
-					return;
-				}
-				
-				// 如果正在播放相同内容，则不重复播放
+            playContent(contentIndex,content) {
 				if (this.playContentIndex === contentIndex) {
-					console.log('当前内容正在播放中');
-					return;
-				}
-				
-				try {
-					// 清除之前的状态检查
-					this.clearStatusTimer();
-					
-					// 设置加载状态
+					// 如果点击的是当前播放的内容，则切换播放/暂停状态
+				} else {
+					// 点击新的内容，切换到新内容并播放
 					this.playContentIndex = contentIndex;
 					// 随机选择一个颜色配对
 					const randomIndex = Math.floor(Math.random() * this.colorPairs.length);
 					this.currentColorPair = this.colorPairs[randomIndex];
-					
-					console.log('开始播放内容:', content);
-					
-					// 调用播放接口
-					const response = await http.post(`/content/${this.currentDevice.id}/play/${content.id}`);
-					console.log('播放接口响应:', response);
-					
-					if (response.code === 0) {
-						this.handlePlayResponse(response.data, contentIndex);
-					} else {
-						this.handlePlayError(response.msg || '播放失败', contentIndex);
-					}
-				} catch (error) {
-					console.error('播放请求失败:', error);
-					this.handlePlayError('播放请求失败', contentIndex);
+
+                    console.log('content===',content);
 				}
-			},
-			
-			// 处理播放响应
-			handlePlayResponse(data, contentIndex) {
-				const { status, message, taskId } = data;
-				
-				switch (status) {
-					case 'SUCCESS':
-						// 播放成功
-						uni.showToast({
-							title: '播放成功',
-							icon: 'success'
-						});
-						// 可以选择保持加载状态或者重置
-						setTimeout(() => {
-							this.resetPlayState();
-						}, 2000);
-						break;
-						
-					case 'BUSY':
-						// 设备繁忙，需要轮询查询状态
-						this.playingTaskId = taskId;
-						uni.showLoading({
-							title: '推送中...',
-							mask: true
-						});
-						this.startStatusPolling(taskId, contentIndex);
-						break;
-						
-					case 'OFFLINE':
-						// 设备离线
-						this.handlePlayError('设备离线，请检查设备连接', contentIndex);
-						break;
-						
-					case 'FAILED':
-						// 播放失败
-						this.handlePlayError(message || '播放失败', contentIndex);
-						break;
-						
-					default:
-						this.handlePlayError('未知状态', contentIndex);
-				}
-			},
-			
-			// 处理播放错误
-			handlePlayError(errorMsg, contentIndex) {
-				console.error('播放错误:', errorMsg);
-				uni.showToast({
-					title: errorMsg,
-					icon: 'none'
-				});
-				this.resetPlayState();
-			},
-			
-			// 开始状态轮询
-			startStatusPolling(taskId, contentIndex) {
-				console.log('开始状态轮询, taskId:', taskId);
-				
-				this.statusCheckTimer = setInterval(async () => {
-					try {
-						const response = await http.get(`/content/task/${taskId}`);
-						console.log('状态查询响应:', response);
-						
-						if (response.code === 0) {
-							const { status } = response.data;
-							
-							if (status !== 'BUSY') {
-								// 状态不再是BUSY，停止轮询
-								this.clearStatusTimer();
-								uni.hideLoading();
-								
-								if (status === 'SUCCESS') {
-									uni.showToast({
-										title: '播放成功',
-										icon: 'success'
-									});
-									setTimeout(() => {
-										this.resetPlayState();
-									}, 2000);
-								} else if (status === 'OFFLINE') {
-									this.handlePlayError('设备离线', contentIndex);
-								} else if (status === 'FAILED') {
-									this.handlePlayError('播放失败', contentIndex);
-								}
-							}
-						} else {
-							// 查询失败，停止轮询
-							this.clearStatusTimer();
-							uni.hideLoading();
-							this.handlePlayError('状态查询失败', contentIndex);
-						}
-					} catch (error) {
-						console.error('状态查询错误:', error);
-						this.clearStatusTimer();
-						uni.hideLoading();
-						this.handlePlayError('状态查询失败', contentIndex);
-					}
-				}, 2000); // 每2秒查询一次
-			},
-			
-			// 清除状态检查定时器
-			clearStatusTimer() {
-				if (this.statusCheckTimer) {
-					clearInterval(this.statusCheckTimer);
-					this.statusCheckTimer = null;
-				}
-				this.playingTaskId = null;
-			},
-			
-			// 重置播放状态
-			resetPlayState() {
-				this.playContentIndex = -1;
-				this.clearStatusTimer();
 			},
 		}
 	}

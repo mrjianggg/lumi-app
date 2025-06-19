@@ -7,20 +7,20 @@
 					<image  class="role-img" mode="widthFix" src="/static/img/roleImg.png"></image>
 					<view class="role-info">
 						<view class="role-info-name">
-							<text>梦想精灵</text>
+							<text>{{deviceInfo?.roleInfo?.roleName}}</text>
 						</view>
 						<view class="role-info-desc">
-							<text>梦想精灵是一个充满幻想的精灵，她拥有着细腻的内心和丰富的想象力</text>
+							<text>{{deviceInfo?.roleInfo?.description}}</text>
 						</view>
 					</view>
 				</view>
 				<view class="my-role-story">
 					<view class="my-role-story-title">
 						<text>角色故事</text>
-						<image src="/static/icon/voice.svg" mode="widthFix" class="my-role-story-title-icon"></image>
+						<!-- <image src="/static/icon/voice.svg" mode="widthFix" class="my-role-story-title-icon"></image> -->
 					</view>
 					<view class="my-role-story-content">
-						<text>梦想精灵是一个充满幻想的精灵，她拥有着细腻的内心和丰富的想象力，她拥有着细腻的内心和丰富的想象力</text>
+						<text>{{deviceInfo?.roleInfo?.roleContent}}</text>
 					</view>
 				</view>
 			</view>
@@ -29,14 +29,14 @@
 					<text>切换角色</text>
 				</view>
 				<view class="change-role-list">
-					<view class="change-role-list-item" :class="{'change-role-list-item-active': changeRoleIndex === item.id}" v-for="item in roleList" :key="item.id" @click="changeRole(item)">
-						<image :src="item.img" mode="widthFix" class="change-role-list-item-img"></image>
+					<view class="change-role-list-item" :class="{'change-role-list-item-active': currentRoleId === item.id}" v-for="item in roleList" :key="item.id" @click="changeRole(item)">
+						<image src="/static/img/roleImg.png" mode="widthFix" class="change-role-list-item-img"></image>
 						<view class="change-role-list-item-info">
 							<view class="change-role-list-item-name">
-								<text>{{ item.name }}</text>
+								<text>{{ item.roleName }}</text>
 							</view>
 							<view class="change-role-list-item-desc">
-								<text>{{ item.desc }}</text>
+								<text>{{ item.roleName }}</text>
 							</view>
 						</view>
 
@@ -51,36 +51,57 @@
 </template>
 
 <script>
+	import http from '@/utils/request.js'
 	export default {
 		data() {
 			return {
-				roleList: [
-					{
-						id: 1,
-						name: '梦想精灵1',
-						desc: '梦想精灵1是一个充满幻想的精灵，她拥有着细腻的内心和丰富的想象力',
-						img: '/static/img/roleImg.png',
-					},
-					{
-						id: 2,
-						name: '梦想精灵2',
-						desc: '梦想精灵2是一个充满幻想的精灵，她拥有着细腻的内心和丰富的想象力',
-						img: '/static/img/roleImg.png',
-					},
-					{
-						id: 3,
-						name: '梦想精灵3',
-						desc: '梦想精灵3是一个充满幻想的精灵，她拥有着细腻的内心和丰富的想象力',
-						img: '/static/img/roleImg.png',
-					}
-				],
-				changeRoleIndex: 1,
+				roleList: [],
+				currentRoleId: null,
+				deviceInfo: {},
 			}
 		},
+		mounted() {
+			this.getRoleList();
+			this.deviceInfo = uni.getStorageSync('currentDevice');
+			console.log('deviceInfo===',this.deviceInfo);
+			this.currentRoleId = this.deviceInfo.roleInfo.roleId;
+		},
 		methods: {
+			getRoleList() {
+				this.roleList = [];
+				http.get('/role/display').then(res => {
+					console.log('roleList===',res);
+					if(res.code === 0){
+						this.roleList = res.data;
+					}
+				})
+			},
 			changeRole(item) {
 				console.log(item);
-				this.changeRoleIndex = item.id;
+
+				http.put('/device/role', {
+					deviceId: this.deviceInfo.id,
+					roleId: item.id
+				}).then(res => {
+					console.log('res===',res);
+					if(res.code === 0){
+						this.deviceInfo.roleInfo.roleId = item.id;
+						this.deviceInfo.roleInfo.roleName = item.roleName;
+						this.deviceInfo.roleInfo.description = item.description;
+						this.deviceInfo.roleInfo.roleContent = item.roleContent;
+						uni.setStorageSync('currentDevice', this.deviceInfo);
+						this.currentRoleId = item.id;
+						uni.showToast({
+							title: '切换成功',
+							icon: 'success'
+						})
+					}else{
+						uni.showToast({
+							title: res.message,
+							icon: 'none'
+						})
+					}
+				})
 			},
 			// TabBar切换事件处理
 			handleTabChange(index) {

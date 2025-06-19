@@ -27,6 +27,7 @@
 </template>
 
 <script>
+	import http from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -36,7 +37,19 @@
 		methods: {
 			logout() {
 				// uni.redirectTo({ url: '/pages/login/index' });
-				uni.reLaunch({ url: '/pages/login/index' });
+				http.post('/user/logout').then(res => {
+					if(res.code === 0){
+						uni.removeStorageSync('currentDevice');
+						uni.removeStorageSync('token');
+						uni.removeStorageSync('userInfo');
+						uni.reLaunch({ url: '/pages/login/index' });
+					}else{
+						uni.showToast({
+							title: res.msg,
+							icon: 'none'
+						});
+					}
+				})
 			}
 		}
 	}

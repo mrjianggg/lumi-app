@@ -97,3 +97,6 @@ export function getFirstLetter(str) {
 	// 其他情况返回 '#'
 	return '#';
 }
+
+
+export const BASE_URL = 'http://101.126.145.3:8002'

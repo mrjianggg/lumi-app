@@ -175,33 +175,30 @@ export default {
 				console.log('刷新数据response===', response);
 				
 				if (response.code === 0) {
+					const newData = response.data.list || []
 					
-					if (response.data.list.length > 0) {
-						this.chatList = [...response.data.list, ...this.chatList]
+					// 将新数据添加到现有数据前面
+					const existingIds = new Set(this.chatList.map(item => `${item.sessionId}_${item.createDate}`))
+					const filteredNewData = newData.filter(item => !existingIds.has(`${item.sessionId}_${item.createDate}`))
+					
+					if (filteredNewData.length > 0) {
+						this.chatList = [...filteredNewData, ...this.chatList]
 						console.log('刷新后的chatList===', this.chatList);
 						this.groupChatBySession()
 						
 						uni.showToast({
-							title: `新增${response.data.list.length}条消息`,
+							title: `新增${filteredNewData.length}条消息`,
 							icon: 'success'
 						})
 					} else {
-						this.page --;
 						uni.showToast({
 							title: '暂无新消息',
 							icon: 'none'
 						})
 					}
-				}else{
-					this.page --;
-					uni.showToast({
-						title: response.msg,
-						icon: 'none'
-					})
 				}
 			} catch (error) {
 				console.error('刷新数据失败:', error)
-				this.page --;
 				uni.showToast({
 					title: '刷新失败',
 					icon: 'error'

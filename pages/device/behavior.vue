@@ -9,11 +9,9 @@
 			</view>
 			<view class="behavior-box">
 				<view class="behavior-box-title">有什么需要我记住的？</view>
-				<textarea v-model="behaviorValue" placeholder-style="color:#757575" maxlength="500" placeholder="多引导表达..." class="behavior-box-textarea"/>
+				<textarea v-model="deviceInfo.userPrompt" placeholder-style="color:#757575" maxlength="500" placeholder="多引导表达..." class="behavior-box-textarea"/>
 				<button 
 					class="save-button" 
-					:class="{ 'disabled': !behaviorValue.trim() }"
-					:disabled="!behaviorValue.trim()"
 					@click="onSave"
 				>
 					保存
@@ -27,6 +25,7 @@
 </template>
 
 <script>
+	import http from '@/utils/request.js'
 	export default {
 		data() {
 			return {
@@ -52,8 +51,12 @@
 						color: '#FFF1C2'
 					}
 				],
-				behaviorValue: '' // 兑换码
+				deviceInfo: {}
 			}
+		},
+		mounted() {
+			this.deviceInfo = uni.getStorageSync('currentDevice');
+			console.log('this.deviceInfo===',this.deviceInfo);
 		},
 		methods: {
 			// TabBar切换事件处理
@@ -72,17 +75,30 @@
 			},
 			// 保存
 			onSave() {
-				if (!this.behaviorValue) {
-					return;
-				}
+				http.put(`/device/userPrompt/${this.deviceInfo.id}`, {
+					userPrompt: this.deviceInfo.userPrompt
+				}).then(res => {
+					if(res.code === 0){
+						uni.setStorageSync('currentDevice', this.deviceInfo);
+						uni.showToast({
+							title: '保存成功',
+							icon: 'success'	
+						});
+					}else{
+						uni.showToast({
+							title: res.msg,
+							icon: 'none'
+						});
+					}
+				})
 			},
 			// 标签点击
 			onLabelClick(item) {
 				console.log(item.label);
-				if(this.behaviorValue){
-					this.behaviorValue = this.behaviorValue + ';' + item.label;
+				if(this.deviceInfo.userPrompt){
+					this.deviceInfo.userPrompt = this.deviceInfo.userPrompt + ';' + item.label;
 				}else{
-					this.behaviorValue += item.label;
+					this.deviceInfo.userPrompt += item.label;
 				}
 			}
 		}

@@ -1,14 +1,14 @@
 <template>
 	<view class="personal-container">
 		<view class="personal-header" @click="openUserInfo">
-			<image src="/static/img/aver.png" mode="widthFix" class="header-image"></image>
-			<view class="header-username">用户名</view>
+			<image :src="userInfo.avatar ? BASE_URL + userInfo.avatar : '/static/img/aver.png'" class="header-image"></image>
+			<view class="header-username">{{userInfo.nickName}}</view>
 			<image src="/static/icon/Edit_light.svg" mode="widthFix" class="header-edit"></image>
 		</view>
 
 		<view class="my-device">
 			<view class="my-device-name">我的设备</view>
-			<view class="my-device-btn" @click="openMyDevices">
+			<view class="my-device-btn" @click="openMyDevices" v-if="deviceList.length > 1">
 				查看全部
 				<image src="/static/icon/right-bt.svg" mode="widthFix"></image>
 			</view>
@@ -16,12 +16,17 @@
 		
 		<view class="device-list-item">
 			<image src="/static/img/deviceImg.png" mode="widthFix" class="device-list-item-img"></image>
-			<view class="device-list-item-info">
+			<view class="device-list-item-info" v-if="deviceList.length > 0">
 				<view class="device-list-item-info-name">
-					<text>Namyvera</text>
+					<text>{{deviceList[0]?.alias || deviceList[0]?.macAddress}}</text>
 				</view>
 				<view class="device-list-item-info-deviceId">
-					<text>SN:jdi2hddi89ghja</text>
+					<text>SN:{{deviceList[0]?.macAddress}}</text>
+				</view>
+			</view>
+			<view class="device-list-item-info" v-else>
+				<view class="device-list-item-info-name">
+					<text>暂无设备</text>
 				</view>
 			</view>
 		</view>
@@ -58,20 +63,37 @@
 
 <script>
 import http from '@/utils/request.js'
+import { BASE_URL } from '@/components/filters.js'
 
 export default {
 	data() {
 		return {
-			
+			BASE_URL,
+			userInfo: {},
+			deviceList: []
 		}
 	},
 	mounted() {
 		this.getUserInfo();
+		this.getDeviceList();
 	},
 	methods: {
+		getDeviceList() {
+			this.deviceList = [];
+			http.get('/device/bind/list').then(res => {
+				console.log('/device/bind/list===', res);
+				if(res.code === 0 && res.data && res.data.length > 0){
+					this.deviceList = res.data;
+				}
+			})
+		},
 		async getUserInfo() {
 			await http.get('/user/info').then(res => {
 				console.log('/user/info===', res);
+				if(res.code === 0){
+					this.userInfo = res.data;
+					uni.setStorageSync('userInfo', res.data);
+				}
 			}).catch(err => {
 				console.error('获取用户信息失败：', err.message)
 			})

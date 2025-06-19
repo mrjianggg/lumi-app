@@ -29,23 +29,28 @@
 
 						<view class="device-card">
 							<view class="device-status">
-								<image class="device-status-wifi" src="/static/icon/Wifi.svg"></image>
-								<image class="device-status-battery" src="/static/icon/gg_battery.svg"></image>
+								<view class="device-status-battery-box">
+									<image class="device-status-battery" src="/static/icon/gg_battery.svg"></image>
+									<view class="device-status-battery-value-box">
+										<view class="device-status-battery-value" :style="{width: device.battery + '%'}"></view>
+									</view>
+								</view>
 								<view class="device-status-onine">
-									<view class="device-status-onine-dian"></view>在线
+									<view class="device-status-onine-dian" :style="{background: device.status ? '#14AE5C' : '#848484'}"></view>
+									{{device.status ? '在线' : '离线'}}
 								</view>
 							</view>
 
-							<view class="device-name">{{device.name}}</view>
-							<view class="device-desc">{{device.description}}</view>
+							<view class="device-name">{{device.alias || device.macAddress}}</view>
+							<!-- <view class="device-desc">{{device.description}}</view> -->
 
 							<!-- 角色精灵卡片 -->
 							<view class="dream-card">
 								<view class="card-header">
 									<image mode="widthFix" class="role-img" src="/static/img/roleImg.png"></image>
 									<view class="card-content">
-										<view class="card-title">{{device.role.name}}</view>
-										<view class="card-desc">{{device.role.description}}</view>
+										<view class="card-title">{{device.roleInfo.roleName}}</view>
+										<view class="card-desc">{{device.roleInfo.description}}</view>
 									</view>
 								</view>
 
@@ -72,14 +77,14 @@
 						<view class="content-section">
 							<view class="section-title">内容推荐</view>
 
-							<view v-for="(content, contentIndex) in device.contentList" :key="contentIndex + 'content'">
+							<view v-for="(content, contentIndex) in recommendList" :key="contentIndex + 'content'">
 								<view
 									:class="['content-item', playContentIndex === contentIndex ? 'content-item-play' : '']"
-									@click="playContent(contentIndex)">
+									@click="playContent(contentIndex,content)">
 									<view class="content-item-left">
 										<!-- <audio-lines-icon v-if="playContentIndex === contentIndex" :color="currentColorPair.icon" /> -->
 										<view class="content-item-left-text">
-											{{content.title}}
+											{{content.name}}
 										</view>
 									</view>
 									<image class="content-item-bt" src="/static/icon/Chevron-right.svg"></image>
@@ -113,6 +118,7 @@
 
 <script>
 	import AudioLinesIcon from '@/components/audio-lines-icon.vue'
+	import http from '@/utils/request.js'
 	export default {
 		components: {
 			AudioLinesIcon
@@ -121,6 +127,7 @@
 			return {
 				playContentIndex: -1,
 				currentDeviceIndex: 0,
+				currentRoleId: '',
 				swiperHeight: 'auto',
 				// 颜色配对数组
 				colorPairs: [
@@ -132,90 +139,27 @@
 				],
 				// 当前选中内容的颜色配对
 				currentColorPair: { background: '#FFE8A3', icon: '#FF9B21' },
-				deviceList: [{
-						id: 1,
-						name: 'Namyvera',
-						emoji: '🐑',
-						description: '是一个未来科技感的创造力伙伴',
-						online: true,
-						charging: true,
-						role: {
-							name: '梦想精灵',
-							icon: '🐑',
-							description: '梦想精灵是具有不充满的想象力和创造性的精灵，爱做梦'
-						},
-						contentList: [{
-								title: '梦想精灵故事',
-								featured: true
-							},
-							{
-								title: '少儿英语',
-								featured: false
-							},
-							{
-								title: '其内容',
-								featured: false
-							}
-						]
-					},
-					{
-						id: 2,
-						name: 'BubblePal',
-						emoji: '🤖',
-						description: '智能陪伴机器人，您的贴心伙伴',
-						online: true,
-						charging: false,
-						role: {
-							name: '智能助手',
-							icon: '🤖',
-							description: '智能助手可以帮助您处理日常事务，提供贴心服务'
-						},
-						contentList: [{
-								title: '智能问答',
-								featured: true
-							},
-							{
-								title: '天气预报',
-								featured: false
-							},
-							{
-								title: '音乐播放',
-								featured: false
-							}
-						]
-					},
-					{
-						id: 3,
-						name: 'StarBot',
-						emoji: '⭐',
-						description: '探索宇宙奥秘的星际伙伴',
-						online: false,
-						charging: true,
-						role: {
-							name: '星际向导',
-							icon: '🚀',
-							description: '星际向导带您探索宇宙的奥秘，学习天文知识'
-						},
-						contentList: [{
-								title: '天文知识',
-								featured: true
-							},
-							{
-								title: '星座故事',
-								featured: false
-							},
-							{
-								title: '太空探索',
-								featured: false
-							}
-						]
-					}
-				]
+				deviceList: [],
+				recommendList: []
 			}
 		},
 		computed: {
-			currentDevice() {
-				return this.deviceList[this.currentDeviceIndex] || {};
+
+		},
+		watch: {
+			currentRoleId(val) {
+				console.log('currentRoleId===',val);
+				if(val){
+					// 获取内容推荐
+					this.getContentRecommendByRoleId(val);
+				}
+			},
+			currentDeviceIndex(val) {
+				console.log('currentDeviceIndex===',this.currentDeviceIndex);
+				if(this.deviceList[val]){
+					uni.setStorageSync('currentDevice', this.deviceList[val]);
+					this.currentRoleId = this.deviceList[val].roleId;
+				}
 			}
 		},
 		onLoad() {
@@ -229,8 +173,31 @@
 			this.$nextTick(() => {
 				this.calculateSwiperHeight();
 			});
+			// 获取设备列表及角色信息
+			this.getDeviceListAndRole();
 		},
 		methods: {
+			// 获取内容推荐
+			getContentRecommendByRoleId(roleId) {
+				http.get(`/content-collection/role/${roleId}`).then(res => {
+					console.log('获取内容推荐===',res);
+					this.recommendList = res.data;
+				})
+			},
+			// 获取设备列表及角色信息
+			getDeviceListAndRole() {
+				uni.setStorageSync('currentDevice', null);
+				http.get('/device/bind/list').then(res => {
+					if(res.code === 0){
+						this.deviceList = res.data;
+						if(this.deviceList.length > 0){
+							this.currentRoleId = this.deviceList[0].roleId;
+							uni.setStorageSync('currentDevice', this.deviceList[0]);
+						}
+					}
+					console.log('获取设备列表及角色信息===',res);
+				})
+			},
 			// 计算swiper容器高度
 			calculateSwiperHeight() {
 				const systemInfo = uni.getSystemInfoSync();
@@ -274,17 +241,18 @@
 				}
 			},
 
-			playContent(contentIndex) {
-				if (this.playContentIndex === contentIndex) {
-					// this.playContentIndex = -1;
-				} else {
-					this.playContentIndex = contentIndex;
-					// 随机选择一个颜色配对
-					const randomIndex = Math.floor(Math.random() * this.colorPairs.length);
-					this.currentColorPair = this.colorPairs[randomIndex];
-				}
+			playContent(contentIndex,content) {
+				// if (this.playContentIndex === contentIndex) {
+				// 	// this.playContentIndex = -1;
+				// } else {
+				// 	this.playContentIndex = contentIndex;
+				// 	// 随机选择一个颜色配对
+				// 	const randomIndex = Math.floor(Math.random() * this.colorPairs.length);
+				// 	this.currentColorPair = this.colorPairs[randomIndex];
+				// }
+				console.log('content===',content);
 				uni.navigateTo({
-					url: '/pages/device/recommend'
+					url: '/pages/device/recommend?id=' + content.id + '&name=' + encodeURIComponent(content.name)
 				})
 			},
 
@@ -419,11 +387,30 @@
 			margin-right: 20rpx;
 		}
 
-		.device-status-battery {
-			width: 44.8rpx;
-			height: 44.8rpx;
-			margin-right: 20rpx;
+		.device-status-battery-box{
+			position: relative;
+			display: flex;
+			.device-status-battery {
+				width: 42rpx;
+				height: 25rpx;
+				margin-right: 20rpx;
+			}
+			.device-status-battery-value-box{
+				position: absolute;
+				top: 5.5rpx;
+				left: 6rpx;
+				width: 28rpx;
+				height: 14rpx;
+				.device-status-battery-value{
+					background: #14AE5C;
+					border-radius: 5rpx;
+					height: 100%;
+				}
+			}
+
 		}
+
+
 
 		.device-status-onine {
 			display: flex;
@@ -439,7 +426,6 @@
 				width: 16.8rpx;
 				height: 16.8rpx;
 				border-radius: 100%;
-				background: #14AE5C;
 				margin-right: 10rpx;
 			}
 		}
@@ -581,7 +567,7 @@
 	/* 内容推荐 */
 	.content-section {
 		margin-top: 40rpx;
-		height: 522.4rpx;
+		min-height: 400rpx;
 		border: 1px solid #D9D9D9;
 		border-radius: 59.7rpx;
 		padding: 0 40rpx;
