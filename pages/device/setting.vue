@@ -30,6 +30,58 @@
 				</view>
 			</view>
 
+			<view class="child-text">
+				小朋友信息
+			</view>
+
+			<view class="child-info">
+				<view class="child-info-item">
+					<view class="child-info-item-left">
+						名字
+					</view>
+					<view class="child-info-item-right">
+						<input v-model="deviceInfo.ownerName" @blur="saveChildInfo()" class="child-input" type="text" placeholder="未设置" />
+					</view>
+				</view>
+
+				<view class="child-info-line"></view>
+
+				<view class="child-info-item">
+					<view class="child-info-item-left">
+						生日
+					</view>
+					<view class="child-info-item-right">
+						<picker mode="date" :value="deviceInfo.birthday" @change="saveChildInfo">
+							<view class="child-input">
+								{{ deviceInfo.birthday }}
+							</view>
+						</picker>
+					</view>
+				</view>
+
+				<view class="child-info-line"></view>
+
+				<view class="child-info-item">
+					<view class="child-info-item-left">
+						性别
+					</view>
+					<view class="child-info-item-right">
+						<view class="boy-box">
+							<view class="check-box" @click="saveChildInfo(1)">
+								<view class="selected" v-if="deviceInfo.gender === 1"></view>
+							</view>
+							男孩
+						</view>
+						<view class="girl-box">
+							<view class="check-box" @click="saveChildInfo(2)">
+								<view class="selected" v-if="deviceInfo.gender === 2"></view>
+							</view>
+							女孩
+						</view>
+					</view>
+				</view>
+			</view>
+
 			<view class="provisioning-btn" @click="toProvisioning">
 				配网管理
 			</view>
@@ -87,6 +139,36 @@
 			console.log('deviceInfo===',this.deviceInfo);
 		},
 		methods: {
+			saveChildInfo(e) {
+				console.log('e===',e);
+				if(e && typeof e === 'number'){
+					this.deviceInfo.gender = e;
+				}
+				if(e && e.detail && e.detail.value){
+					this.deviceInfo.birthday = e.detail.value;
+				}
+				console.log('this.deviceInfo.ownerName===',this.deviceInfo.ownerName);
+				console.log('this.deviceInfo.birthday===',this.deviceInfo.birthday);
+				console.log('this.deviceInfo.gender===',this.deviceInfo.gender);
+				http.put('/device/ownerInfo/' + this.deviceInfo.id, {
+					ownerName: this.deviceInfo.ownerName,
+					birthday: this.deviceInfo.birthday,
+					gender: this.deviceInfo.gender
+				}).then(res => {
+					if(res.code === 0){
+						uni.setStorageSync('currentDevice', this.deviceInfo);
+						uni.showToast({
+							title: '修改成功',
+							icon: 'success'
+						})
+					}else{
+						uni.showToast({
+							title: res.message,
+							icon: 'none'
+						})
+					}
+				})
+			},
 			// TabBar切换事件处理
 			handleTabChange(index) {
 				const tabPages = [
@@ -324,6 +406,100 @@
 					display: none !important;
 				}
 			}
+			.child-text{
+				margin-top: 29.9rpx;
+				font-size: 29.9rpx;
+				font-weight: 400;
+				color: #303030;
+			}
+			.child-info{
+				margin-top: 29.9rpx;
+				background-color: #F5F5F5;
+				border: 1rpx solid #D9D9D9;
+				border-radius: 59.7rpx;
+				padding: 44.8rpx;
+				.child-info-item{
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					color: #303030;
+					font-size: 29.9rpx;
+					font-weight: 400;
+					.child-info-item-left{
+						font-size: 29.9rpx;
+						font-weight: 400;
+						color: #303030;
+					}
+					.child-input{
+						text-align: right;
+						font-size: 29.9rpx;
+						font-weight: 400;
+						color: #303030;
+						.uni-input-placeholder {
+							color: #B3B3B3;
+							font-size: 29.9rpx;
+						}
+					}
+					.child-info-item-right{	
+						display: flex;
+						align-items: center;
+						justify-content: space-between;
+						color: #B3B3B3;
+						font-size: 29.9rpx;
+						font-weight: 400;
+						.boy-box{
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							margin-right: 14.9rpx;
+							.check-box{
+								margin-right: 5rpx;
+								width: 33.6rpx;
+								height: 33.6rpx;
+								border-radius: 100%;
+								border: 2px solid #209BFF;
+								display: flex;
+								align-items: center;
+								justify-content: center;
+								.selected{
+									width: 25rpx;
+									height: 25rpx;
+									border-radius: 100%;
+									background-color: #209BFF;
+								}
+							}
+						}
+						.girl-box{
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							.check-box{
+								margin-right: 5rpx;
+								width: 33.6rpx;
+								height: 33.6rpx;
+								border-radius: 100%;
+								border: 2px solid #F19EDC;
+								display: flex;
+								align-items: center;
+								justify-content: center;
+								.selected{
+									width: 25rpx;
+									height: 25rpx;
+									border-radius: 100%;
+									background-color: #F19EDC;
+								}
+							}
+						}
+					}
+				}
+				.child-info-line{
+					width: 100%;
+					height: 1rpx;
+					background-color: #D9D9D9;
+					margin: 29.9rpx 0;
+				}
+			}
+
 			.provisioning-btn{
 				display: flex;
 				align-items: center;

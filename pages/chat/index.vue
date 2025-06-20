@@ -1,7 +1,13 @@
 <template>
 	<view class="chat-container">
+		<view class="no-device" v-if="deviceList.length === 0">
+			<view class="no-device-content" @click="goToDevice">
+				<image src="/static/icon/mingcute_ai-fill.svg" class="no-device-icon"></image>
+				添加设备
+			</view>
+		</view>
 		<!-- 顶部设备选择 -->
-		<view class="header">
+		<view class="header" v-if="deviceList.length > 0">
 			<view class="device-selector" @click="showDeviceSelector = true">
 				<view class="device-name">{{ currentDevice.alias || currentDevice.macAddress }}</view>
 				<image src="/static/icon/select-icon.svg" class="dropdown-icon"></image>
@@ -114,6 +120,12 @@ export default {
 	},
 	
 	methods: {
+		goToDevice() {
+			console.log('goToDevice===');
+			uni.navigateTo({
+				url: '/pages/provisioning/index'
+			})
+		},
 		getDeviceList() {
 			this.deviceList = [];
 			http.get('/device/bind/list').then(res => {
@@ -122,12 +134,6 @@ export default {
 					this.deviceList = res.data;
 					this.currentDeviceId = this.deviceList[0].id;
 					this.loadChatData()
-				} else {
-					console.log('没有绑定的设备');
-					uni.showToast({
-						title: '没有绑定的设备',
-						icon: 'none'
-					})
 				}
 			}).catch(error => {
 				console.error('获取设备列表失败:', error)
@@ -314,6 +320,26 @@ export default {
 	flex-direction: column;
 	height: 100vh;
 	background-color: #FFFFFF;
+	.no-device {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+		z-index: 3;
+		.no-device-content {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: #ae66bb;
+			padding: 20rpx 40rpx;
+			border-radius: 50rpx;
+			.no-device-icon {	
+				margin-right: 10rpx;
+				width: 50rpx;
+				height: 50rpx;
+			}
+		}
+	}
 	.header {
 		position: relative;
 		z-index: 100;

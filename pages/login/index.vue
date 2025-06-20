@@ -203,7 +203,9 @@
 							icon: 'success'
 						});
 						// 跳转到首页
-						uni.reLaunch({ url: '/' });
+						uni.reLaunch({
+							url: '/pages/tabbar-container/index?tab=0'
+						})
 					}
 				}).catch(err => {
 					console.error('发送验证码失败：', err.message)
@@ -254,7 +256,7 @@
 
 <style lang="scss" scoped>
 	.login-page {
-		min-height: 100vh;
+		min-height: 102vh;
 		position: relative;
 		display: flex;
 		flex-direction: column;
@@ -262,7 +264,7 @@
 	
 		.header-box{
             background-color: #81D3FF;
-			width: 100%;
+			width: 100vw;
 			height: 522.4rpx;
             display: flex;
             justify-content: center;
@@ -273,12 +275,16 @@
 			}
 		}
 		.login-card {
-            margin-top: -100rpx;
+			position: absolute;
+			top: 410rpx;
+			left: 0;
+			right: 0;
+			bottom: 0;
 			background-image: url('/static/img/loginBg.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;
-			padding: 60rpx 40rpx;
+			padding: 60rpx 40rpx 60rpx 40rpx;
 			z-index: 2;
 			
 			.card-title {
@@ -405,7 +411,7 @@
 			
 			.third-party-login {
 				margin-top: 29.9rpx;
-				margin-bottom: 106.3rpx;
+				margin-bottom: 90rpx;
 				
 				.google-login-btn, .apple-login-btn, .weixin-login-btn {
 					width: 100%;

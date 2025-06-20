@@ -1,7 +1,7 @@
 <template>
 	<view class="personal-container">
 		<view class="personal-header" @click="openUserInfo">
-			<image :src="userInfo.avatar ? BASE_URL + userInfo.avatar : '/static/img/aver.png'" class="header-image"></image>
+			<image :src="BASE_URL + userInfo.avatar" class="header-image" :style="{borderWidth: userInfo.avatar ? '0' : '1px'}"></image>
 			<view class="header-username">{{userInfo.nickName}}</view>
 			<image src="/static/icon/Edit_light.svg" mode="widthFix" class="header-edit"></image>
 		</view>
@@ -141,6 +141,8 @@ export default {
 	align-items: center;
 	justify-content: start;
 	.header-image {
+		border-color: #D9D9D9;
+		border-style: solid;
 		width: 166rpx;
 		height: 166rpx;
 		border-radius: 100%;

@@ -36,19 +36,26 @@
 		},
 		methods: {
 			logout() {
-				// uni.redirectTo({ url: '/pages/login/index' });
-				http.post('/user/logout').then(res => {
-					if(res.code === 0){
-						uni.removeStorageSync('currentDevice');
-						uni.removeStorageSync('token');
-						uni.removeStorageSync('userInfo');
-						uni.reLaunch({ url: '/pages/login/index' });
-					}else{
-						uni.showToast({
-							title: res.msg,
-							icon: 'none'
-						});
-					}
+				uni.showModal({
+					title: '提示',
+					content: '确定退出登录吗？',
+					success: (res) => {
+						if(res.confirm){
+							http.post('/user/logout').then(res => {
+								if(res.code === 0){
+									uni.removeStorageSync('currentDevice');
+									uni.removeStorageSync('token');
+									uni.removeStorageSync('userInfo');
+									uni.reLaunch({ url: '/pages/login/index' });
+								}else{
+									uni.showToast({
+										title: res.msg,
+										icon: 'none'
+									});
+								}
+							})
+						}
+					}	
 				})
 			}
 		}

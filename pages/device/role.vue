@@ -36,7 +36,7 @@
 								<text>{{ item.roleName }}</text>
 							</view>
 							<view class="change-role-list-item-desc">
-								<text>{{ item.roleName }}</text>
+								<text>{{ item.description }}</text>
 							</view>
 						</view>
 

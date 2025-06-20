@@ -6,7 +6,7 @@
 		<view class="page-header" v-else>
 			<image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
 			<view class="page-header-title">
-			<text>{{ title }}</text>
+			<text></text>
 			</view>
 			<view class="page-header-back"></view>
 		</view>
@@ -48,7 +48,7 @@
 								<!-- 配网失败重试按钮 -->
 								<view @click="retryProvisioning" v-if="index === 6 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
 								<!-- 扫描刷新按钮 -->
-								<view @click="startScanningBle" v-if="index === 1 && (scanningFailed || !scanningActive)" style="margin-left: 16rpx;">🔄</view>
+								<view @click="refreshScanningBle" v-if="index === 1 && (scanningFailed || !scanningActive)" style="margin-left: 16rpx;">🔄</view>
 								<!-- 权限检查步骤显示详细信息 -->
 								<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
 								<!-- 配网失败错误信息 -->
@@ -86,6 +86,28 @@
 						</view>
 					</view>
 				</view>
+
+				<!-- 重新配网弹窗 -->
+				<view v-if="macAddress && showReProvisioningDialog" class="device-modal">
+					<view class="modal-content">
+						<view class="modal-header">
+							<view class="close-button"></view>
+							<view class="modal-title">将设备调整为配网模式</view>
+							<image @click="closeReProvisioning" class="close-button" src="/static/icon/model-close.svg" mode="widthFix"></image>
+						</view>
+						
+
+						<image class="device-img" src="/static/img/deviceImg.png" mode="widthFix"></image>
+
+						<view class="device-name">
+							双击配网键，玩具进入配网模式
+						</view>
+						
+						<view class="modal-buttons">
+							<view class="modal-btn cancel-btn" @click="closeReProvisioning">取消</view>
+						</view>
+					</view>
+				</view>
 			</view>
 
 			<!-- 阶段4: WiFi配置 -->
@@ -102,7 +124,6 @@
 							class="wifi-input" 
 							v-model="wifiName" 
 							placeholder="手动输入Wi-Fi名字"
-							@focus="showWifiList = false"
 						/>
 					</view>
 				</view>
@@ -142,9 +163,9 @@
 					</view>
 				</view>
 				
-				<view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
+				<!-- <view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
 					发送数据到自定义端点
-				</view>
+				</view> -->
 
 				<view class="connect-wifi-btn" @click="onSelectWifi" v-if="provisioningPage === 1">
 					选择 Wi-Fi
@@ -157,13 +178,13 @@
 			</view>
 		</view>
 
-		<view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
+		<!-- <view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
 			发送数据到自定义端点
 		</view>
 
 		<view style="padding: 50rpx;" @click="disconnectDevice">
 			断开设备
-		</view>
+		</view> -->
 	</view>
 </template>
 
@@ -217,16 +238,24 @@ export default {
 			// 状态步骤定义
 			statusSteps: [
 				{ text: '权限及网络正常' },
-				{ text: '正在扫描 BubblePal 蓝牙信号' },
-				{ text: '扫描 BubblePal wifi 信号' },
-				{ text: '手机连接 BubblePal' },
+				{ text: '正在扫描 Namy 蓝牙信号' },
+				{ text: '扫描 Namy wifi 信号' },
+				{ text: '手机连接 Namy' },
 				{ text: '用户输入 wifi 密码' },
-				{ text: '推送 WiFi 配置至 BubblePal' },
-				{ text: '等待 BubblePal 配对' }
-			]
+				{ text: '推送 WiFi 配置至 Namy' },
+				{ text: '等待 Namy 配对' }
+			],
+			service: {},
+			macAddress: '',
+			showReProvisioningDialog: false
 		}
 	},
 	onLoad(options) {
+		console.log('options===',options);
+		if(options.macAddress){
+			this.macAddress = options.macAddress;
+			this.showReProvisioningDialog = true;
+		}
 		// 首先检查蓝牙和网络状态
 		this.checkPermissionsAndNetwork();
 	},
@@ -244,14 +273,226 @@ export default {
 		foundDevice: {
 			handler(newVal) {
 				console.log('foundDevice4444===',newVal);
-				if(newVal.sn){
-					this.bindDevice();
+				if(newVal.sn){ 
+					if(this.macAddress){// 如果有macAddress，则不走绑定流程,直接下一步配置wifi
+						this.showReProvisioningDialog = false;
+						this.setPopActive = false;
+						this.currentStage = 'wifiConfig';
+						this.provisioningPage = 1;
+						this.pushStep('wifiConfig');
+						this.scanWifiNetworks();
+					}else{
+						this.bindDevice();
+					}
 				}
 			},
 			deep: true
 		}
 	},
 	methods: {
+		closeReProvisioning(){
+			this.showReProvisioningDialog = false;
+			uni.reLaunch({
+				url: '/pages/device/setting'
+			})
+		},
+		// 连接蓝牙
+		createBLEConnection(){
+			console.log('createBLEConnection0000');
+			uni.createBLEConnection({
+				deviceId: this.foundDevice.deviceId,
+				success: (res) => {
+					console.log('createBLEConnectionRes:', res)
+					if(res.errMsg === 'createBLEConnection:ok'){
+						this.getBLEDeviceServices();
+					}
+				}
+			})
+		},
+		// 获取设备服务
+		getBLEDeviceServices(deviceId){
+			// Android平台需要延迟获取服务，避免services为空的问题
+			const delay = uni.getSystemInfoSync().platform === 'android' ? 2000 : 500;
+			
+			setTimeout(() => {
+				this.getBLEDeviceServicesWithRetry(deviceId, 0);
+			}, delay);
+		},
+		// 带重试机制的获取设备服务
+		getBLEDeviceServicesWithRetry(deviceId, retryCount) {
+			const maxRetries = 3;
+			
+			uni.getBLEDeviceServices({
+				deviceId: deviceId,
+				success: (res) => {
+					console.log('获取设备服务成功', res);
+					
+					// 如果服务为空且重试次数未达到最大值，则重试
+					if (res.services.length === 0 && retryCount < maxRetries) {
+						console.log(`服务为空，第 ${retryCount + 1} 次重试...`);
+						
+						setTimeout(() => {
+							this.getBLEDeviceServicesWithRetry(deviceId, retryCount + 1);
+						}, 2000);
+						return;
+					}
+					
+					if (res.services.length === 0) {
+						// 如果重试后仍然为空，尝试重新连接
+						console.log('警告', '服务获取失败，尝试重新连接设备');
+						this.reconnectDeviceUni(deviceId);
+						return;
+					}
+					
+					console.log('服务', `发现 ${res.services.length} 个服务`);
+					
+					// 为每个服务获取特征值
+					res.services.forEach(service => {
+						if(service.uuid.toUpperCase() === '00011525-1212-EFDE-1523-785FEABCD123'){
+							this.service = service;
+							console.log('this.service----', this.service);
+							this.getBLEDeviceCharacteristics(deviceId, service.uuid);
+						}
+					});
+				},
+				fail: (err) => {
+					console.error('获取设备服务失败', err);
+					
+					// 失败时也可以重试
+					if (retryCount < maxRetries) {
+						setTimeout(() => {
+							this.getBLEDeviceServicesWithRetry(deviceId, retryCount + 1);
+						}, 2000);
+					}
+				}
+			});
+		},
+		// 重新连接设备
+		reconnectDeviceUni(deviceId) {
+			console.log('操作', '正在重新连接设备...');
+			
+			// 先断开连接
+			uni.closeBLEConnection({
+				deviceId: deviceId,
+				success: () => {
+					// 等待一段时间后重新连接
+					setTimeout(() => {
+						this.connectDevice();
+					}, 1000);
+				}
+			});
+		},
+		// 获取服务的特征值
+		async getBLEDeviceCharacteristics(deviceId, serviceId) {
+			uni.getBLEDeviceCharacteristics({
+				deviceId: deviceId,
+				serviceId: serviceId,
+				success: async (res) => {
+					console.log('获取特征值成功', res);
+					// 更新服务的特征值
+					const characteristics = res.characteristics.map(char => ({
+						...char,
+						notify: false
+					}));
+					console.log('特征值', `服务 ${serviceId} 有 ${res.characteristics.length} 个特征值`);
+					res.characteristics.forEach( async char => {
+						if(char.uuid.toUpperCase() === '01011525-1212-EFDE-1523-785FEABCD123'){
+							this.service.charUuid = char.uuid;
+							await this.readCharacteristic(this.service.uuid, char.uuid);
+						}
+					});
+				},
+				fail: (err) => {
+					console.error('获取特征值失败', err);
+				}
+			});
+		},
+		// 读取特征值
+		readCharacteristic(serviceId, characteristicId) {
+
+			uni.readBLECharacteristicValue({
+				deviceId: this.foundDevice.deviceId,
+				serviceId: serviceId,
+				characteristicId: characteristicId,
+				success: (res) => {
+					console.log('读取特征值成功', res);
+
+					// 监听特征值变化
+					uni.onBLECharacteristicValueChange((result) => {
+						if (result.characteristicId === characteristicId) {
+							const hexString = this.arrayBufferToHex(result.value);
+							console.log('读取-----', result);
+							console.log('读取', `${characteristicId}: ${hexString}`);
+							const decodedString = Buffer.from(hexString, 'hex').toString('utf8'); // 先解码 hex
+							const deviceInfo = JSON.parse(decodedString);
+							console.log('deviceInfo===',deviceInfo);
+							this.foundDevice.sn = deviceInfo.DdeviceId || deviceInfo.deviceId;
+							this.foundDevice.deviceType = deviceInfo.DdeviceType || deviceInfo.deviceType;
+						}
+					});
+
+					uni.showToast({
+						title: '读取成功',
+						icon: 'success'
+					});
+				},
+				fail: (err) => {
+					console.error('读取特征值失败', err);
+					uni.showToast({
+						title: `读取失败: ${err.errMsg}`,
+						icon: 'none'
+					});
+					this.addLog('错误', `读取失败: ${err.errMsg}`);
+				}
+			});
+		},
+		// 十六进制字符串转ArrayBuffer
+		hexToArrayBuffer(hex) {
+			const cleanHex = hex.replace(/[^0-9A-Fa-f]/g, '');
+			const buffer = new ArrayBuffer(cleanHex.length / 2);
+			const view = new Uint8Array(buffer);
+
+			for (let i = 0; i < cleanHex.length; i += 2) {
+				view[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+			}
+
+			return buffer;
+		},
+		// 写入特征值
+		writeCharacteristic() {
+
+			try {
+				const buffer = this.hexToArrayBuffer('01');
+				
+				uni.writeBLECharacteristicValue({
+					deviceId: this.foundDevice.deviceId,
+					serviceId: this.service.uuid,
+					characteristicId: this.service.charUuid,
+					value: buffer,
+					success: (res) => {
+						console.log('写入特征值成功', res);
+						uni.reLaunch({
+							url: '/pages/tabbar-container/index?tab=0'
+						})
+					},
+					fail: (err) => {
+						console.error('写入特征值失败', err);
+					}
+				});
+			} catch (error) {
+				uni.showToast({
+					title: '写入特征值报错',
+					icon: 'none'
+				});
+			}
+		},
+		// ArrayBuffer转十六进制字符串
+		arrayBufferToHex(buffer) {
+			return Array.prototype.map.call(
+				new Uint8Array(buffer),
+				x => ('00' + x.toString(16)).slice(-2)
+			).join('');
+		},
 		// 检查权限和网络状态
 		async checkPermissionsAndNetwork() {
 			this.permissionStatus.checking = true;
@@ -495,7 +736,7 @@ export default {
 			
 			const currentStep = stageStepMap[this.currentStage];
 			
-			// 特殊处理第6步（等待BubblePal配对）
+			// 特殊处理第6步（等待Namy配对）
 			if (stepIndex === 6) {
 				if (this.currentStage === 'provisioning' && this.provisioningStatus.isWaitingForPairing) {
 					return 'active'; // 显示loading状态
@@ -547,7 +788,11 @@ export default {
 			
 			return details.join(' ');
 		},
-
+		// 刷新扫描蓝牙
+		refreshScanningBle(){
+			this.disconnectDevice()
+			this.startScanningBle();
+		},
 		// 开始扫描蓝牙
 		startScanningBle() {
 			console.log('准备开始蓝牙扫描...');
@@ -598,29 +843,48 @@ export default {
 				console.log('blueModule===',blueModule);
 				blueModule.startBleScan({
 					securityType: 2,
-					deviceNamePrefix: 'Lumi_'
+					deviceNamePrefix: 'Namy'
 				}, (ret) => {
 					console.log('蓝牙扫描结果ret:',ret)
 					if (ret.success && ret.msg == 'onPeripheralFound') {
-						// 检查设备是否已存在
-						const deviceExists = this.deviceList.some(device => device.deviceId === ret.data.deviceId);
-						if (!deviceExists) {
-							if (this.scanTimeout) {
-								clearTimeout(this.scanTimeout);
-							}
-							// 添加新设备到列表
-							this.deviceList.push({
-								name: ret.data.name,
-								deviceId: ret.data.deviceId,
-								serviceUuid: '021A9004-0382-4AEA-BFF4-6B3F1C5ADFB4'
-								// serviceUuid: ret.data.serviceUuid || ret.data.advertisServiceUUIDs[0]
-							});
-							
-							// 如果是第一个设备，显示弹窗
-							if (this.deviceList.length === 1) {
-								this.foundDevice = this.deviceList[0];
-								this.currentStage = 'deviceFound';
+						// 如果传入了macAddress，则是重新配网
+						if(this.macAddress){
+							let name1 = ret.data.localName.split('_')[1];
+							if(name1 && this.macAddress.toUpperCase().includes(name1.toUpperCase())){
+								if (this.scanTimeout) {
+									clearTimeout(this.scanTimeout);
+								}
+								this.foundDevice = {
+									name: ret.data.localName,
+									deviceId: ret.data.deviceId,
+									serviceUuid: '021A9004-0382-4AEA-BFF4-6B3F1C5ADFB4'
+								};
+								// this.currentStage = 'deviceFound';
 								this.pushStep('deviceFound');
+								this.connectDevice();
+							}
+						}else{
+							// 检查设备是否已存在
+							const deviceExists = this.deviceList.some(device => device.deviceId === ret.data.deviceId);
+							if (!deviceExists) {
+								if (this.scanTimeout) {
+									clearTimeout(this.scanTimeout);
+								}
+								// 添加新设备到列表
+								this.deviceList.push({
+									name: ret.data.localName,
+									deviceId: ret.data.deviceId,
+									serviceUuid: '021A9004-0382-4AEA-BFF4-6B3F1C5ADFB4'
+									// ret.data.localName.includes('NamyAI') ? '00011525-1212-efde-1523-785feabcd123' : 
+									// serviceUuid: ret.data.serviceUuid || ret.data.advertisServiceUUIDs[0]
+								});
+								
+								// 如果是第一个设备，显示弹窗
+								if (this.deviceList.length === 1) {
+									this.foundDevice = this.deviceList[0];
+									this.currentStage = 'deviceFound';
+									this.pushStep('deviceFound');
+								}
 							}
 						}
 					}
@@ -680,22 +944,39 @@ export default {
 				if(res.code === 0){
 					if(res.data === true){
 						uni.showToast({
-							title: '设备已绑定',
-							icon: 'none'
+							title: '设备已被绑定',
+							icon: 'error'
 						});
+						// 断开连接
+						this.disconnectDevice();
 						return;
 					}else{
 						await http.post('/device/register', {
 							macAddress: this.foundDevice.sn
-						}).then(res => {
+						}).then(async res => {
 							console.log('lumi/device/register===', res);
 							if(res.code === 0){
-								this.setPopActive = false;
-								// 自动扫描WiFi网络 - 先检查权限
-								this.currentStage = 'wifiConfig';
-								this.provisioningPage = 1;
-								this.pushStep('wifiConfig');
-								this.scanWifiNetworks();
+								uni.showToast({
+									title: '绑定成功',
+									icon: 'success'
+								});
+								if(!this.foundDevice.name.includes('NamyAI')){ // 非NamyAI设备走配网流程
+									this.setPopActive = false;
+									this.currentStage = 'wifiConfig';
+									this.provisioningPage = 1;
+									this.pushStep('wifiConfig');
+									this.scanWifiNetworks();
+								}else{ // NamyAI设备绑定成功则写入设备
+									await this.writeCharacteristic();
+								}
+								uni.hideLoading();
+
+							}else{
+								uni.hideLoading();
+								uni.showToast({
+									title: res.message,
+									icon: 'none'
+								});
 							}
 
 						}).catch(err => {
@@ -714,27 +995,81 @@ export default {
 		// 连接设备
 		connectDevice() {
 			console.log('this.foundDevice=',this.foundDevice);
-			blueModule.connectDevice({
-				mac: this.foundDevice.deviceId, //mac地址
-				serviceUuid: this.foundDevice.serviceUuid
-			}, (ret) => {
-				//扫描回调结果
-				console.log('连接设备ret:',ret)
-				if (ret.success && ret.msg == 'EVENT_DEVICE_CONNECTED') {
-					// 设置POP（后台执行，用户不可见）
-					this.currentStage = 'setingPop';
-					this.pushStep('setingPop');
-					// 发送数据到自定义端点 获取SN
-					this.sendDataToCustomEndPoint();
-					// 设置POP
-					this.setProofOfPossession();
-				}
+			uni.showLoading({
+				title: '连接中...'
 			});
+			if(this.foundDevice.name.includes('NamyAI')){ // 'NamyAI'的设备不用设置POP
+				uni.createBLEConnection({
+					deviceId: this.foundDevice.deviceId,
+					success: (res) => {
+						console.log('uni连接设备成功', res);
+						this.connectedDevice = this.foundDevice;
+						
+						// 监听连接状态变化（在获取服务之前先设置监听）
+						uni.onBLEConnectionStateChange((res) => {
+							if (res.deviceId === this.foundDevice.deviceId) {
+								console.log('连接状态变化:', res);
+								if (res.connected) {
+									console.log('状态', '设备连接状态: 已连接');
+								} else {
+									console.log('状态', '设备连接状态: 已断开');
+									this.connectedDevice = null;
+									this.services = [];
+								}
+							}
+						});
+						
+						// Android平台需要额外等待连接稳定
+						const systemInfo = uni.getSystemInfoSync();
+						const waitTime = systemInfo.platform === 'android' ? 3000 : 1000;
+						
+						setTimeout(() => {
+							// 连接成功后获取设备服务
+							this.getBLEDeviceServices(this.foundDevice.deviceId);
+							uni.hideLoading();
+						}, waitTime);
+					},
+					fail: (err) => {
+						console.error('连接设备失败', err);
+						uni.hideLoading();
+						uni.showToast({
+							title: `连接失败: ${err.errMsg}`,
+							icon: 'none'
+						});
+					}
+				});
+			}else{
+				console.log('connectDevice22222');
+				blueModule.connectDevice({
+					mac: this.foundDevice.deviceId, //mac地址
+					serviceUuid: this.foundDevice.serviceUuid
+				}, (ret) => {
+					//扫描回调结果
+					console.log('连接设备ret:',ret)
+					if (ret.success && ret.msg == 'EVENT_DEVICE_CONNECTED') {
+						uni.hideLoading();
+						// 设置POP（后台执行，用户不可见）
+						this.currentStage = 'setingPop';
+						this.pushStep('setingPop');
+						// 发送数据到自定义端点 获取SN
+						this.sendDataToCustomEndPoint();
+						// 设置POP
+						this.setProofOfPossession();
+					}
+				});
+			}
+
 
 		},
 		// 断开连接
 		disconnectDevice() {
-			blueModule.disconnectDevice();
+			if(this.foundDevice.name.includes('NamyAI')){
+				uni.closeBLEConnection({
+					deviceId: this.foundDevice.deviceId
+				});
+			}else{	
+				blueModule.disconnectDevice();
+			}
 		},
 
 		// 扫描WiFi网络
@@ -847,7 +1182,7 @@ export default {
 		
 		// 切换WiFi列表显示
 		toggleWifiList() {
-			this.showWifiList = !this.showWifiList;
+			// this.showWifiList = !this.showWifiList;
 		},
 		
 		// 切换密码可见性
@@ -972,23 +1307,85 @@ export default {
 				});
 			}
 		},
-		// 获取设备ID
+		// 获取设备ID（带重试机制）
 		sendDataToCustomEndPoint() {
-			console.log('sendDataToCustomEndPoint11111');
+			console.log('sendDataToCustomEndPoint开始获取设备SN...');
+			this.sendDataWithRetry(0);
+		},
+		
+		// 带重试机制的设备数据获取
+		sendDataWithRetry(retryCount) {
+			const maxRetries = 3; // 最大重试次数
+			const retryDelay = 2000; // 重试间隔2秒
+			
+			console.log(`第 ${retryCount + 1} 次尝试获取设备SN...`);
+			
 			blueModule.sendDataToCustomEndPoint({
 				path: 'device',
 				bytes: [0xFF, 0xF0], //优先级第一
 				hexStr: 'FFF0' //优先级第二
 			}, (ret) => {
 				//扫描回调结果
-				console.log('sendDataToCustomEndPoint===',ret)
-				const decodedString = Buffer.from(ret.data, 'hex').toString('utf8'); // 先解码 hex
-				const deviceInfo = JSON.parse(decodedString);
-				console.log('deviceInfo===',deviceInfo);
-				this.foundDevice.sn = deviceInfo.deviceId;
-				console.log('this.foundDevice.sn===',this.foundDevice.sn);
-				this.foundDevice.deviceType = deviceInfo.deviceType;
+				console.log('sendDataToCustomEndPoint回调结果===', ret);
+				
+				try {
+					if (ret && ret.data) {
+						const decodedString = Buffer.from(ret.data, 'hex').toString('utf8'); // 先解码 hex
+						const deviceInfo = JSON.parse(decodedString);
+						console.log('解析到的设备信息===', deviceInfo);
+						
+						// 设置设备信息
+						this.foundDevice.sn = deviceInfo.deviceId || deviceInfo.DdeviceId;
+						this.foundDevice.deviceType = deviceInfo.deviceType || deviceInfo.DdeviceType;
+						
+						console.log('设备SN获取成功:', this.foundDevice.sn);
+						
+						// 检查是否成功获取到SN
+						if (this.foundDevice.sn) {
+							console.log('✅ 设备SN获取成功，停止重试');
+							return; // 成功获取，停止重试
+						}
+					}
+					
+					// 如果没有获取到SN，触发重试检查
+					this.checkAndRetryIfNeeded(retryCount, maxRetries, retryDelay);
+					
+				} catch (error) {
+					console.error('解析设备信息失败:', error);
+					// 解析失败也触发重试检查
+					this.checkAndRetryIfNeeded(retryCount, maxRetries, retryDelay);
+				}
 			});
+			
+			// 设置2秒超时检查
+			setTimeout(() => {
+				if (!this.foundDevice.sn) {
+					console.log(`⚠️ 第 ${retryCount + 1} 次尝试超时，未获取到设备SN`);
+					this.checkAndRetryIfNeeded(retryCount, maxRetries, retryDelay);
+				}
+			}, retryDelay);
+		},
+		
+		// 检查并根据需要重试
+		checkAndRetryIfNeeded(retryCount, maxRetries, retryDelay) {
+			if (!this.foundDevice.sn && retryCount < maxRetries) {
+				console.log(`🔄 ${retryDelay/1000}秒后进行第 ${retryCount + 2} 次重试...`);
+				setTimeout(() => {
+					this.sendDataWithRetry(retryCount + 1);
+				}, retryDelay);
+			} else if (!this.foundDevice.sn && retryCount >= maxRetries) {
+				console.error('❌ 达到最大重试次数，仍未获取到设备SN');
+				uni.showToast({
+					title: '获取设备信息失败，请重试',
+					icon: 'none',
+					duration: 3000
+				});
+				
+				// 可以选择断开连接重新开始
+				this.disconnectDevice();
+				this.currentStage = 'scanning';
+				this.pushStep('scanning');
+			}
 		},
 		// 获取版本信息
 		getVersionInfo() {

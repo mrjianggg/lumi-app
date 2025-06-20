@@ -55,7 +55,19 @@
 				statusCheckTimer: null // 状态检查定时器
 			}
 		},
-		onLoad() {
+		onLoad(options) {
+			console.log('页面参数:', options);
+			// 在uni-app中使用onLoad获取页面参数
+			this.fId = options.id;
+			this.fName = options.name ? decodeURIComponent(options.name) : '';
+			
+			// 获取当前设备信息
+			this.currentDevice = uni.getStorageSync('currentDevice');
+			console.log('当前设备信息:', this.currentDevice);
+			
+			if(this.fId){
+				this.getRecommend();
+			}
 		},
 		onUnload() {
 		},
@@ -63,15 +75,6 @@
 
 		},
         mounted() {
-            this.fId = this.$route.query.id;
-            this.fName = decodeURIComponent(this.$route.query.name);
-            // 获取当前设备信息
-            this.currentDevice = uni.getStorageSync('currentDevice');
-            console.log('当前设备信息:', this.currentDevice);
-            if(this.fId){
-                this.getRecommend();
-            }
-
         },
 		
 		onUnload() {

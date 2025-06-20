@@ -573,7 +573,7 @@
 		padding: 0 40rpx;
 
 		.section-title {
-			margin-top: 30rpx;
+			margin: 30rpx 0;
 			font-size: 29.9rpx;
 			font-weight: 400;
 			color: #303030;
@@ -591,7 +591,7 @@
 			border-radius: 59.7rpx;
 			border: 1px solid #D9D9D9;
 			padding: 0 50rpx;
-			margin-top: 30rpx;
+			margin-bottom: 30rpx;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;

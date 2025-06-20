@@ -26,13 +26,13 @@ class Request {
    */
   interceptRequest(options) {
     // 显示加载提示
-    uni.showLoading({
-      title: '加载中...',
-      mask: true
-    })
+    // uni.showLoading({
+    //   title: '加载中...',
+    //   mask: true
+    // })
 
     // 添加token到请求头（如果存在）
-    const token = uni.getStorageSync('token') || '16d6cf66210c23500db14933645d5599'  // 测试后删除
+    const token = uni.getStorageSync('token')
     if (token) {
       options.header = {
         ...options.header,
@@ -58,7 +58,7 @@ class Request {
    */
   interceptResponse(response) {
     // 隐藏加载提示
-    uni.hideLoading()
+    // uni.hideLoading()
 
     console.log('响应数据：', response)
 
@@ -143,7 +143,7 @@ class Request {
             .catch(reject)
         },
         fail: (error) => {
-          uni.hideLoading()
+          // uni.hideLoading()
           console.error('请求失败：', error)
           
           let errorMsg = '网络连接失败'
@@ -242,10 +242,10 @@ class Request {
       header['Authorization'] = `Bearer ${token}`
     }
 
-    uni.showLoading({
-      title: '上传中...',
-      mask: true
-    })
+    // uni.showLoading({
+    //   title: '上传中...',
+    //   mask: true
+    // })
 
     return new Promise((resolve, reject) => {
       uni.uploadFile({
@@ -255,7 +255,7 @@ class Request {
         formData,
         header,
         success: (response) => {
-          uni.hideLoading()
+          // uni.hideLoading()
           console.log('上传响应：', response)
           
           if (response.statusCode === 200) {
@@ -286,7 +286,7 @@ class Request {
           }
         },
         fail: (error) => {
-          uni.hideLoading()
+          // uni.hideLoading()
           console.error('上传失败：', error)
           uni.showToast({
             title: '上传失败',
