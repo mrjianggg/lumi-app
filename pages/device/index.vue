@@ -437,7 +437,6 @@
 			color: #303030;
 			border-radius: 30rpx;
 			padding: 8rpx 20rpx;
-			background: #EBE7FF;
 
 			.device-status-onine-dian {
 				width: 16.8rpx;
@@ -520,7 +519,7 @@
 		.set-box-left {
 			flex: 1;
 			height: 85.8rpx;
-			background: #FDD3D0;
+			background: #E8DEFF;
 			border-radius: 40rpx;
 			margin-right: 10rpx;
 			display: flex;
@@ -540,7 +539,7 @@
 		.set-box-right {
 			width: 85.8rpx;
 			height: 85.8rpx;
-			background: #EBE7FF;
+			background: #FFDEF7;
 			border-radius: 100%;
 			display: flex;
 			align-items: center;
@@ -565,7 +564,7 @@
 		margin-top: 40rpx;
 		width: 100%;
 		height: 85.8rpx;
-		background: #CFE9FF;
+		background: #FFDEF7;
 		border-radius: 40rpx;
 		color: #303030;
 		font-size: 29.9rpx;

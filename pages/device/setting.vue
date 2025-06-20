@@ -51,9 +51,9 @@
 						生日
 					</view>
 					<view class="child-info-item-right">
-						<picker mode="date" :value="deviceInfo.birthday" @change="saveChildInfo">
-							<view class="child-input">
-								{{ deviceInfo.birthday }}
+						<picker mode="date" :value="birthdayValue" @change="onBirthdayChange">
+							<view class="child-input" :class="{ placeholder: !deviceInfo.birthday }">
+								{{ displayBirthday }}
 							</view>
 						</picker>
 					</view>
@@ -127,6 +127,24 @@
 				deviceInfo: {},
 			}
 		},
+		computed: {
+			// 生日显示值
+			displayBirthday() {
+				return this.deviceInfo.birthday || '未设置'
+			},
+			// picker组件需要的值，为null时提供默认日期
+			birthdayValue() {
+				if (this.deviceInfo.birthday) {
+					return this.deviceInfo.birthday
+				}
+				// 如果没有生日，返回今天的日期作为picker的默认值
+				const today = new Date()
+				const year = today.getFullYear()
+				const month = String(today.getMonth() + 1).padStart(2, '0')
+				const day = String(today.getDate()).padStart(2, '0')
+				return `${year}-${month}-${day}`
+			}
+		},
 		watch: {
 
 		},
@@ -139,17 +157,24 @@
 			console.log('deviceInfo===',this.deviceInfo);
 		},
 		methods: {
+			// 生日选择改变事件
+			onBirthdayChange(e) {
+				console.log('生日选择:', e.detail.value)
+				this.deviceInfo.birthday = e.detail.value
+				this.saveChildInfo()
+			},
+			
 			saveChildInfo(e) {
-				console.log('e===',e);
+				console.log('保存儿童信息, e===', e);
+				// 处理性别选择
 				if(e && typeof e === 'number'){
 					this.deviceInfo.gender = e;
 				}
-				if(e && e.detail && e.detail.value){
-					this.deviceInfo.birthday = e.detail.value;
-				}
-				console.log('this.deviceInfo.ownerName===',this.deviceInfo.ownerName);
-				console.log('this.deviceInfo.birthday===',this.deviceInfo.birthday);
-				console.log('this.deviceInfo.gender===',this.deviceInfo.gender);
+				console.log('保存数据:', {
+					ownerName: this.deviceInfo.ownerName,
+					birthday: this.deviceInfo.birthday,
+					gender: this.deviceInfo.gender
+				});
 				http.put('/device/ownerInfo/' + this.deviceInfo.id, {
 					ownerName: this.deviceInfo.ownerName,
 					birthday: this.deviceInfo.birthday,
@@ -435,6 +460,11 @@
 						font-size: 29.9rpx;
 						font-weight: 400;
 						color: #303030;
+						
+						&.placeholder {
+							color: #B3B3B3;
+						}
+						
 						.uni-input-placeholder {
 							color: #B3B3B3;
 							font-size: 29.9rpx;

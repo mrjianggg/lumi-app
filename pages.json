@@ -7,6 +7,15 @@
 		}
 	},
 	"pages": [{
+		"path": "pages/splash/index",
+		"style": {
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	}, {
 		"path": "pages/tabbar-container/index",
 		"style": {
 			"navigationStyle": "custom",

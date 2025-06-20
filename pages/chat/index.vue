@@ -152,11 +152,10 @@ export default {
 				console.log('/device/bind/list===',res);
 				if(res.code === 0 && res.data && res.data.length > 0){
 					this.deviceList = res.data;
-					console.log('this.deviceList===',this.deviceList);
 					this.currentDeviceId = this.deviceList[0].id;
-					if(this.deviceList.length > 0){
-						this.onRefresh() // 加载聊天数据
-					}
+					this.onRefresh() // 加载聊天数据
+				}else{
+					this.deviceList = []
 				}
 			}).catch(error => {
 				console.error('获取设备列表失败:', error)
@@ -202,7 +201,12 @@ export default {
 				
 				if (response.code === 0) {
 					if (response.data && response.data.list && response.data.list.length > 0) {
-						this.chatList = [...response.data.list.reverse(), ...this.chatList]
+						if(this.page === 1){
+							this.chatList = response.data.list.reverse()
+						}else{
+							this.chatList = [...response.data.list.reverse(), ...this.chatList]
+						}
+						
 						console.log('this.chatList===', this.chatList);
 						if(this.page > 1){
 							uni.showToast({
@@ -479,10 +483,7 @@ export default {
 					}
 					
 					.device-avatar {
-						background: linear-gradient(135deg, #b19cd9 0%, #c5a9dd 100%);
-					}
-					.user-avatar {
-						background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+						background: #D5CFFF;
 					}
 			
 					.message-content {
@@ -506,16 +507,6 @@ export default {
 					}
 					.device-message {
 						background-color:#F5F5F5;
-						&::before {
-							content: '';
-							position: absolute;
-							left: -10rpx;
-							top: 20rpx;
-							width: 0;
-							height: 0;
-							border: 10rpx solid transparent;
-							border-right-color: white;
-						}
 					}
 					.user-message {
 						background: #D5CFFF;

@@ -263,7 +263,7 @@
 		align-items: center;
 	
 		.header-box{
-            background-color: #81D3FF;
+            background-color: #CFF9FF;
 			width: 100vw;
 			height: 522.4rpx;
             display: flex;
@@ -392,7 +392,7 @@
 			}
 			
 			.divider {
-				margin-top: 104.5rpx;
+				margin-top: 29.9rpx;
 				display: flex;
 				align-items: center;
 				

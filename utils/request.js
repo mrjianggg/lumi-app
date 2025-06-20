@@ -69,13 +69,20 @@ class Request {
       if (data.code === 0) {
         return Promise.resolve(data)
       } else if(data.code === 401){
-        // 清除本地token
-        uni.removeStorageSync('token')
-        // 跳转登录页面
-        uni.navigateTo({
-          url: '/pages/login/index'
-        })
-        return Promise.reject(new Error(data))
+          // 未授权，清除本地token并跳转登录页
+          const errorMsg = data.message || data.msg || data.errMsg || '登录已过期，请重新登录'
+          uni.showToast({
+            title: errorMsg,
+            icon: 'none',
+            duration: 2000
+          })
+          // 清除本地token
+          uni.removeStorageSync('token')
+          // 跳转到启动页，让启动页处理跳转逻辑
+          uni.reLaunch({
+            url: '/pages/splash/index'
+          })
+          return Promise.reject(new Error(errorMsg))
       } else {
         // 业务错误
         const errorMsg = data.message || data.msg || data.errMsg || '请求失败'

@@ -1,15 +1,15 @@
 <template>
 	<view class="provisioning-container">
 		<!-- 返回按钮 -->
-		<head-return v-if="currentStage === 'checking' || currentStage === 'provisioningSuccess'" :toPage="0" title=""></head-return>
+		<head-return :toPage="0" title=""></head-return>
 
-		<view class="page-header" v-else>
+		<!-- <view class="page-header" v-else>
 			<image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
 			<view class="page-header-title">
 			<text></text>
 			</view>
 			<view class="page-header-back"></view>
-		</view>
+		</view> -->
 		
 		
 		<!-- 主要内容区域 -->
@@ -43,12 +43,6 @@
 							
 							<view class="status-content">
 								<text class="status-text">{{step.text}}</text>
-								<!-- 权限检查重试按钮 -->
-								<view @click="checkPermissionsAndNetwork" v-if="index === 0 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
-								<!-- 配网失败重试按钮 -->
-								<view @click="retryProvisioning" v-if="index === 6 && getStepClass(index) === 'error'" style="margin-left: 16rpx;">🔄</view>
-								<!-- 扫描刷新按钮 -->
-								<view @click="refreshScanningBle" v-if="index === 1 && (scanningFailed || !scanningActive)" style="margin-left: 16rpx;">🔄</view>
 								<!-- 权限检查步骤显示详细信息 -->
 								<text v-if="index === 0" class="status-detail">{{getPermissionDetailText()}}</text>
 								<!-- 配网失败错误信息 -->
@@ -93,7 +87,7 @@
 						<view class="modal-header">
 							<view class="close-button"></view>
 							<view class="modal-title">将设备调整为配网模式</view>
-							<image @click="closeReProvisioning" class="close-button" src="/static/icon/model-close.svg" mode="widthFix"></image>
+							<view class="close-button"></view>
 						</view>
 						
 
@@ -143,10 +137,13 @@
 				</view>
 				
 				<!-- WiFi列表 -->
-				<view class="wifi-list-section" v-if="provisioningPage === 1">
+				<view class="wifi-list-section">
 					<view class="wifi-list-header" @click="toggleWifiList">
 						<text class="list-title">Wi-Fi 列表</text>
 						<image class="refresh-button" @click="scanWifiNetworks" src="/static/icon/Refresh.svg" mode="widthFix"></image>
+					</view>
+					<view class="wifi-list-loading" v-if="scanWifiLoading">
+						<image src="/static/icon/loading.svg" mode="widthFix"></image>
 					</view>
 					<view v-if="showWifiList && wifiList.length > 0">
 						<view class="wifi-list">
@@ -176,6 +173,27 @@
 					连接 Wi-Fi
 				</view>
 			</view>
+		</view>
+
+				
+		<!-- 权限检查重试按钮 -->
+		<view class="connect-wifi-btn" @click="checkPermissionsAndNetwork" v-if="currentStage === 'checking' && getStepClass(index) === 'error'">
+			重试
+		</view>
+
+		<!-- 扫描刷新按钮 -->
+		<view class="connect-wifi-btn" @click="refreshScanningBle" v-if="(currentStage === 'scanning' || currentStage === 'setingPop') && (scanningFailed || !scanningActive)">
+			重试
+		</view>
+
+		<!-- 配网失败重试按钮 -->
+		<view class="connect-wifi-btn" @click="retryProvisioning" v-if="currentStage === 'provisioningFailed'">
+			重试
+		</view>
+
+		<!-- 配网失败重试按钮 -->
+		<view class="connect-wifi-btn" @click="closeProvisioning" v-if="currentStage === 'provisioningSuccess'">
+			完成
 		</view>
 
 		<!-- <view style="padding: 50rpx;" @click="sendDataToCustomEndPoint">
@@ -263,6 +281,7 @@ export default {
 		if (blueModule) {
 			blueModule.stopBleScan();
 		}
+		this.disconnectDevice();
 		// 清除扫描超时定时器
 		if (this.scanTimeout) {
 			clearTimeout(this.scanTimeout);
@@ -504,6 +523,9 @@ export default {
 		},
 		// 检查权限和网络状态
 		async checkPermissionsAndNetwork() {
+			if(this.macAddress){
+				this.showReProvisioningDialog = true;
+			}
 			this.permissionStatus.checking = true;
 			
 			// 添加超时机制，避免无限加载
@@ -715,6 +737,7 @@ export default {
 				} else if (this.isPermissionAllOk()) {
 					return 'completed';
 				} else {
+					this.showReProvisioningDialog = false;
 					return 'error';
 				}
 			}
@@ -722,6 +745,7 @@ export default {
 			// 特殊处理第1步（扫描蓝牙设备）
 			if (stepIndex === 1) {
 				if (this.scanningFailed) {
+					this.showReProvisioningDialog = false;
 					return 'error'; // 扫描失败显示错误状态
 				} else if (this.currentStage === 'scanning' && this.scanningActive) {
 					return 'active'; // 正在扫描显示活动状态
@@ -752,6 +776,7 @@ export default {
 				} else if (this.currentStage === 'provisioningSuccess') {
 					return 'completed'; // 配网成功
 				} else if (this.currentStage === 'provisioningFailed') {
+					this.showReProvisioningDialog = false;
 					return 'error'; // 配网失败
 				} else if (currentStep > 6) {
 					return 'completed';
@@ -799,6 +824,9 @@ export default {
 		},
 		// 刷新扫描蓝牙
 		refreshScanningBle(){
+			if(this.macAddress){
+				this.showReProvisioningDialog = true;
+			}
 			this.disconnectDevice()
 			this.currentStage = 'scanning';
 			this.startScanningBle();
@@ -839,6 +867,7 @@ export default {
 				console.log('扫描超时，停止扫描');
 				this.scanningActive = false;
 				this.scanningFailed = true; // 设置扫描失败状态
+				this.showReProvisioningDialog = false;
 				if (blueModule) {
 					blueModule.stopBleScan();
 				}
@@ -959,6 +988,8 @@ export default {
 							title: '设备已被绑定',
 							icon: 'error'
 						});
+						this.scanningFailed = true;
+						this.showReProvisioningDialog = false;
 						// 断开连接
 						this.disconnectDevice();
 						return;
@@ -1087,16 +1118,13 @@ export default {
 		// 扫描WiFi网络
 		scanWifiNetworks() {
 			console.log('扫描WiFi1111');
-			
+			this.scanWifiLoading = true;
 			if (blueModule) {
 				console.log('插件blueModule===',blueModule);
-				uni.showLoading({
-					title: `扫描WiFi中...`
-				});
 				
 				// 添加超时处理 - 缩短超时时间以便快速重试
 				let scanTimeout = setTimeout(() => {
-					uni.hideLoading();
+					this.scanWifiLoading = false;
 					console.log('WiFi扫描超时');
 				}, 6000); // 改为6秒超时
 				
@@ -1106,7 +1134,7 @@ export default {
 					blueModule.scanNetworks((ret) => {
 						// 清除超时定时器
 						clearTimeout(scanTimeout);
-						uni.hideLoading();
+						this.scanWifiLoading = false;
 						
 						console.log('扫描WiFi3333');
 						// 记录详细的回调信息
@@ -1174,10 +1202,11 @@ export default {
 					});
 				} catch (error) {
 					clearTimeout(scanTimeout);
-					uni.hideLoading();
+					this.scanWifiLoading = false;
 					console.log('扫描WiFi异常: ' + error.toString());
 				}
 			} else {
+				this.scanWifiLoading = false;
 				uni.showToast({
 					title: '扫描Wi-Fi插件未找到',
 					icon: 'none'
@@ -1309,6 +1338,7 @@ export default {
 					console.log('配网成功，可以执行后续操作');
 				}, 3000);
 			} else {
+				this.showReProvisioningDialog = false;
 				this.currentStage = 'provisioningFailed';
 				// 将错误信息存储到provisioningStatus中
 				this.provisioningStatus.errorMessage = message;
@@ -1505,7 +1535,9 @@ export default {
 					break;
 			}
 		},
-		
+		closeProvisioning(){
+			uni.navigateBack();
+		},
 		// 返回
 		goBack() {
 			console.log('当前阶段:', this.currentStage);
@@ -1571,6 +1603,9 @@ export default {
 		
 		// 重试配网
 		retryProvisioning() {
+			if(this.macAddress){
+				this.showReProvisioningDialog = true;
+			}
 			console.log('重试配网');
 			// 重置状态回到WiFi配置阶段
 			this.provisioningStatus = {
@@ -1876,6 +1911,16 @@ export default {
 		}
 		.refresh-button {
 			width: 37.3rpx;
+		}
+	}
+	.wifi-list-loading{
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		image{
+			width: 100rpx;
+			//旋转
+			animation: spin 2.5s linear infinite;
 		}
 	}
 	.wifi-list {
