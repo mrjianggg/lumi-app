@@ -175,9 +175,9 @@
 			</view>
 		</view>
 
-				
+
 		<!-- 权限检查重试按钮 -->
-		<view class="connect-wifi-btn" @click="checkPermissionsAndNetwork" v-if="currentStage === 'checking' && getStepClass(index) === 'error'">
+		<view class="connect-wifi-btn" @click="checkPermissionsAndNetwork" v-if="currentStage === 'checking' && getStepClass(0) === 'error'">
 			重试
 		</view>
 
@@ -1740,18 +1740,17 @@ export default {
 		right: 0;
 		bottom: 0;
 		background: rgba(0, 0, 0, 0.5);
-		display: flex;
-		align-items: end;
-		justify-content: center;
 		z-index: 1000;
 		.modal-content {
-			margin-bottom: 48.5rpx;
+			position: absolute;
+			bottom: 48.5rpx;
+			left: 50%;
+			transform: translateX(-50%);
 			background: #fff;
 			border-radius: 24rpx;
 			padding: 44.8rpx;
-			position: relative;
 			max-width: 550rpx;
-			width: 100%;
+			width: calc(100% - 44.8rpx);
 
 			.modal-header {
 				display: flex;
@@ -1805,10 +1804,6 @@ export default {
 					color: #1E1E1E;
 				}
 			}
-			
-
-
-
 		}
 		
 
@@ -1819,29 +1814,14 @@ export default {
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
 .status-default-icon {
 	width: 44.8rpx;
 }
-
-
 
 @keyframes spin {
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
-
-
-
 
 
 /* WiFi配置阶段 */
