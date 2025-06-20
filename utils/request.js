@@ -45,7 +45,6 @@ class Request {
       options.url = this.baseURL + options.url
     }
 
-    console.log('token===', token)
     console.log('请求地址：', options.url)
     console.log('请求参数：', options.data)
     
@@ -70,10 +69,13 @@ class Request {
       if (data.code === 0) {
         return Promise.resolve(data)
       } else if(data.code === 401){
-        // 未授权，跳转登录
+        // 清除本地token
+        uni.removeStorageSync('token')
+        // 跳转登录页面
         uni.navigateTo({
           url: '/pages/login/index'
         })
+        return Promise.reject(new Error(data))
       } else {
         // 业务错误
         const errorMsg = data.message || data.msg || data.errMsg || '请求失败'

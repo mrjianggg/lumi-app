@@ -48,10 +48,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 134.3rpx;
+  height: 140rpx;
   background-color: #fff;
   border-bottom: 1rpx solid #D9D9D9;
-
+  padding-top: 20rpx;
   .page-header-back {
     margin-left: 30rpx;
     width: 44.8rpx;

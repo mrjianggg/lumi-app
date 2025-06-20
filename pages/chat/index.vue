@@ -1,9 +1,9 @@
 <template>
-	<view class="chat-container">
-		<view class="no-device" v-if="deviceList.length === 0">
-			<view class="no-device-content" @click="goToDevice">
-				<image src="/static/icon/mingcute_ai-fill.svg" class="no-device-icon"></image>
-				添加设备
+	<view class="chat-container" :style="{backgroundColor: deviceList.length === 0 ? '#F5F5F5' : '#FFF'}">
+		<view class="add-device-content" v-if="deviceList.length === 0">
+			<view class="add-device-card" @click="goToDevice">
+				<image class="add-device-img" src="/static/img/Add_square.png"  mode="widthFix"></image>
+				<view class="add-device-text">添加设备</view>
 			</view>
 		</view>
 		<!-- 顶部设备选择 -->
@@ -32,16 +32,16 @@
 		<view v-if="showDeviceSelector" class="mask" @click="showDeviceSelector = false"></view>
 		
 		<!-- 聊天记录列表 -->
-		<z-paging ref="paging" refresher-only @onRefresh="onRefresh" class="chat-list" >
+		<z-paging ref="paging" refresher-only @onRefresh="onRefresh" class="chat-list" v-if="deviceList.length > 0">
 			<!-- 页面内容 -->
-			<view v-for="session in groupedChatList" :key="session.sessionId" class="session-group">
-				<!-- 会话时间分隔 -->
-				<view class="session-divider">
-					<text class="session-time">{{ session.startTime }}</text>
+			<view v-for="(message, index) in chatList" :key="index" class="message-group">
+				<!-- 会话时间分隔 - 当当前消息与下一条消息的createDate不同时显示 -->
+				<view v-if="shouldShowSessionTime(index)" class="session-divider">
+					<text class="session-time">{{ message.createDate }}</text>
 				</view>
 				
-				<!-- 聊天消息列表 -->
-				<view v-for="(message, messageIndex) in session.messages" :key="messageIndex" class="message-item">
+				<!-- 聊天消息 -->
+				<view class="message-item">
 					<!-- 设备消息（左侧） -->
 					<view v-if="message.chatType === 2" class="message-wrapper left">
 						<view class="avatar device-avatar"></view>
@@ -69,27 +69,54 @@ export default {
 		return {
 			// 设备列表
 			deviceList: [
-				{ id: 1, name: 'Lumi' },
-				{ id: 2, name: '小智助手' },
-				{ id: 3, name: '智能音箱' }
+				{id: '0', alias: '', macAddress: ''}
 			],
 			currentDeviceId: null,
 			showDeviceSelector: false,
 			
 			// 聊天数据
-			chatList: [],
-			groupedChatList: [],
+			chatList: [
+				{
+					createDate: '',
+					content: '',
+					chatType: 1
+				},
+				{
+					createDate: '',
+					content: '',
+					chatType: 2
+				},
+				{
+					createDate: '',
+					content: '',
+					chatType: 1
+				},
+				{
+					createDate: '',
+					content: '',
+					chatType: 2
+				},
+				{
+					createDate: '',
+					content: '',
+					chatType: 1
+				},
+				{
+					createDate: '',
+					content: '',
+					chatType: 2
+				}
+			],
 			
 			// 分页参数
-			page: 1,
+			page: 0,
 			pageSize: 10,
 			total: 0,
 			
 			// 状态
 			loading: false,
 			refresherTriggered: false,
-			noMore: false,
-			// currentDevice: {}
+			noMore: false
 		}
 	},
 	
@@ -108,32 +135,28 @@ export default {
 	},
 	mounted() {
 		// 页面加载时初始化数据
-		// this.loadChatData();
 		this.getDeviceList();
 	},
 	
 	onShow() {
-		// 页面显示时，如果没有数据则加载
-		// if (this.chatList.length === 0) {
-		// 	this.loadChatData()
-		// }
 	},
 	
 	methods: {
 		goToDevice() {
-			console.log('goToDevice===');
 			uni.navigateTo({
 				url: '/pages/provisioning/index'
 			})
 		},
 		getDeviceList() {
-			this.deviceList = [];
 			http.get('/device/bind/list').then(res => {
 				console.log('/device/bind/list===',res);
 				if(res.code === 0 && res.data && res.data.length > 0){
 					this.deviceList = res.data;
+					console.log('this.deviceList===',this.deviceList);
 					this.currentDeviceId = this.deviceList[0].id;
-					this.loadChatData()
+					if(this.deviceList.length > 0){
+						this.onRefresh() // 加载聊天数据
+					}
 				}
 			}).catch(error => {
 				console.error('获取设备列表失败:', error)
@@ -152,25 +175,22 @@ export default {
 			this.currentDeviceId = device.id
 			this.showDeviceSelector = false
 			this.resetData()
-			this.loadChatData()
+			this.onRefresh() // 加载聊天数据
 		},
 		
 		// 重置数据
 		resetData() {
 			this.chatList = []
-			this.groupedChatList = []
-			this.page = 1
+			this.page = 0
 			this.total = 0
 			this.noMore = false
 		},
 		
 		// 下拉刷新 - 加载最新数据
 		async onRefresh() {
-			console.log('onRefresh开始刷新');
 			this.page ++;
 			// 检查是否有当前设备
 			if (!this.currentDevice || !this.currentDevice.id) {
-				console.log('没有选择设备，无法刷新聊天数据');
 				this.$refs.paging.complete();
 				return
 			}
@@ -181,16 +201,16 @@ export default {
 				console.log('刷新数据response===', response);
 				
 				if (response.code === 0) {
-					
-					if (response.data.list.length > 0) {
-						this.chatList = [...response.data.list, ...this.chatList]
-						console.log('刷新后的chatList===', this.chatList);
-						this.groupChatBySession()
-						
-						uni.showToast({
-							title: `新增${response.data.list.length}条消息`,
-							icon: 'success'
-						})
+					if (response.data && response.data.list && response.data.list.length > 0) {
+						this.chatList = [...response.data.list.reverse(), ...this.chatList]
+						console.log('this.chatList===', this.chatList);
+						if(this.page > 1){
+							uni.showToast({
+								title: `新增${response.data.list.length}条消息`,
+								icon: 'success'
+							})
+						}
+
 					} else {
 						this.page --;
 						uni.showToast({
@@ -216,91 +236,40 @@ export default {
 				this.$refs.paging.complete();
 			}
 		},
-		
-		
-		// 加载聊天数据
-		async loadChatData() {
-			console.log('loadChatData开始加载数据');
-			if (this.loading) return
+		// 判断是否需要显示会话时间分隔
+		shouldShowSessionTime(index) {
+			// 第一条消息总是显示时间
+			if (index === 0) return true
 			
-			// 检查是否有当前设备
-			if (!this.currentDevice || !this.currentDevice.id) {
-				console.log('没有选择设备，无法加载聊天数据');
-				return
-			}
+			const currentMessage = this.chatList[index]
+			const nextMessage = this.chatList[index + 1]
 			
-			this.loading = true
-			
-			try {
-				// 调用真实API接口
-				const response = await http.get(`/chat-history/device/${this.currentDevice.id}?page=${this.page}&limit=${this.pageSize}`)
-				console.log('加载聊天数据response===', response);
-				
-				if (response.code === 0) {
-					const newData = response.data.list || []
-					this.total = response.data.total || 0
-					
-					if (this.page === 1) {
-						this.chatList = newData
-					} else {
-						this.chatList = [...this.chatList, ...newData]
-					}
-					
-					this.groupChatBySession()
-					
-					// 检查是否还有更多数据
-					if (this.chatList.length >= this.total) {
-						this.noMore = true
-					}
-				}
-			} catch (error) {
-				console.error('加载聊天数据失败:', error)
-				uni.showToast({
-					title: '加载失败',
-					icon: 'error'
-				})
-			} finally {
-				this.loading = false
-			}
+			// 如果没有下一条消息，或者当前消息与下一条消息的createDate不同，则显示时间
+			return !nextMessage || currentMessage.createDate !== nextMessage.createDate
 		},
 		
-
-		
-		// 按会话分组聊天记录
-		groupChatBySession() {
-			const sessionMap = new Map()
+		// 格式化会话时间
+		formatSessionTime(dateStr) {
+			const date = new Date(dateStr)
+			const now = new Date()
+			const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+			const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 			
-			// 按时间倒序排列
-			const sortedList = [...this.chatList].sort((a, b) => 
-				new Date(b.createDate) - new Date(a.createDate)
-			)
+			// 判断是否是今天
+			if (messageDate.getTime() === today.getTime()) {
+				return this.formatTime(dateStr)
+			}
 			
-			sortedList.forEach(message => {
-				if (!sessionMap.has(message.sessionId)) {
-					sessionMap.set(message.sessionId, {
-						sessionId: message.sessionId,
-						messages: [],
-						startTime: message.createDate
-					})
-				}
-				
-				const session = sessionMap.get(message.sessionId)
-				session.messages.push(message)
-				
-				// 更新会话开始时间（最早的消息时间）
-				if (new Date(message.createDate) < new Date(session.startTime)) {
-					session.startTime = message.createDate
-				}
-			})
+			// 判断是否是昨天
+			const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+			if (messageDate.getTime() === yesterday.getTime()) {
+				return `昨天 ${this.formatTime(dateStr)}`
+			}
 			
-			// 转换为数组并按会话开始时间排序
-			this.groupedChatList = Array.from(sessionMap.values())
-				.sort((a, b) =>  new Date(a.startTime) - new Date(b.startTime))
-			
-			// 每个会话内的消息按时间正序排列
-			this.groupedChatList.forEach(session => {
-				session.messages.sort((a, b) => new Date(a.createDate) - new Date(b.createDate))
-			})
+			// 其他日期显示月日
+			const month = (date.getMonth() + 1).toString().padStart(2, '0')
+			const day = date.getDate().toString().padStart(2, '0')
+			return `${month}-${day} ${this.formatTime(dateStr)}`
 		},
 		
 		// 格式化消息时间
@@ -315,6 +284,59 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.add-device-content {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 0 50rpx;
+	position: relative;
+
+	.add-device-nav {
+		position: absolute;
+		top: 120rpx;
+		left: 33.6rpx;
+		z-index: 100;
+
+		.top-nav-button {
+			position: relative;
+			transition: all 0.3s ease;
+
+			.top-nav-icon {
+				width: 89.6rpx;
+				height: 89.6rpx;
+			}
+
+			.top-nav-icon:active {
+				transform: scale(0.95);
+			}
+		}
+	}
+
+	.add-device-card {
+		background: #fff;
+		border-radius: 59.7rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid #D9D9D9;
+		width: 100%;
+		height: 60%;
+		.add-device-img {
+			width: 429.1rpx;
+		}
+
+		.add-device-text {
+			margin-top: 29.9rpx;
+			font-size: 44.8rpx;
+			font-weight: 600;
+			color: #1E1E1E;
+			text-align: center;
+		}
+	}
+}
 .chat-container {
 	display: flex;
 	flex-direction: column;
@@ -421,7 +443,7 @@ export default {
 		padding: 52rpx 52rpx 152rpx 52rpx;
 		margin-top: 100rpx;
 
-		.session-group {
+		.message-group {
 			margin-bottom: 40rpx;
 			.session-divider {
 				display: flex;

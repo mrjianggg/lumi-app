@@ -84,7 +84,7 @@
 		methods: {
             getRecommend() {
                 this.contentList = [];
-                http.get(`/content/collection/${this.fId}?page=1&limit=10`).then(res => {
+                http.get(`/content/collection/${this.fId}?page=1&limit=1000`).then(res => {
                     console.log('res===',res);
                     if(res.code === 0){
                         this.contentList = res.data.list;

@@ -77,7 +77,13 @@ export default {
 		this.getUserInfo();
 		this.getDeviceList();
 	},
+	onShow() {
+		this.handlePageShow();
+	},
 	methods: {
+		handlePageShow() {
+			this.getUserInfo();
+		},
 		getDeviceList() {
 			this.deviceList = [];
 			http.get('/device/bind/list').then(res => {
@@ -88,6 +94,7 @@ export default {
 			})
 		},
 		async getUserInfo() {
+			console.log('getUserInfo1111');
 			await http.get('/user/info').then(res => {
 				console.log('/user/info===', res);
 				if(res.code === 0){

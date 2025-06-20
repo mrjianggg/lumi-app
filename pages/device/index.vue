@@ -166,17 +166,34 @@
 			this.calculateSwiperHeight();
 		},
 		onReady() {
+			console.log('onReady1111');
 			this.calculateSwiperHeight();
 		},
+		onShow() {
+			console.log('=== 设备页面原生 onShow 被调用 ===');
+			this.handlePageShow();
+		},
 		mounted() {
+			console.log('mounted1111');
 			// 组件挂载时也计算高度（用于作为组件使用的情况）
 			this.$nextTick(() => {
 				this.calculateSwiperHeight();
 			});
+			if(uni.getStorageSync('currentDevice')){
+				this.deviceList.push(uni.getStorageSync('currentDevice'));
+			}
 			// 获取设备列表及角色信息
 			this.getDeviceListAndRole();
 		},
 		methods: {
+			// 处理页面显示 - 供父组件调用
+			handlePageShow() {
+				console.log('=== 设备页面 handlePageShow 被调用 ===');
+				console.log('页面显示，重新获取设备列表');
+				// 从二级页面返回时重新获取设备列表
+				this.getDeviceListAndRole();
+			},
+			
 			// 获取内容推荐
 			getContentRecommendByRoleId(roleId) {
 				http.get(`/content-collection/role/${roleId}`).then(res => {

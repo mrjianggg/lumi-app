@@ -67,8 +67,8 @@ export default {
   },
   
   onShow() {
-    // 分发生命周期到当前显示的组件
-    this.distributeLifecycle('onShow');
+    // 分发生命周期到当前显示的组件，调用组件的handlePageShow方法
+    this.distributeLifecycle('handlePageShow');
   },
   
   onHide() {
@@ -97,20 +97,21 @@ export default {
         this.distributeLifecycle('onShow');
       });
       
-      console.log(`Tab切换: ${oldIndex} -> ${index}`);
     },
     
     // 生命周期分发器
     distributeLifecycle(lifecycle, params = null, toAll = false) {
+      
       const componentRefs = [
         this.$refs.devicePage,
         this.$refs.chatPage, 
         this.$refs.personalPage
       ];
       
+      
       if (toAll) {
         // 分发到所有组件
-        componentRefs.forEach(ref => {
+        componentRefs.forEach((ref, index) => {
           if (ref && ref[lifecycle]) {
             ref[lifecycle](params);
           }
@@ -118,8 +119,10 @@ export default {
       } else {
         // 只分发到当前组件
         const currentRef = componentRefs[this.currentTabIndex];
+        
         if (currentRef && currentRef[lifecycle]) {
           currentRef[lifecycle](params);
+        } else {
         }
       }
     }
