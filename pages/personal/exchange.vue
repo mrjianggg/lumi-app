@@ -72,11 +72,11 @@
 
 <style lang="scss" scoped>
 	.page-main {
-		min-height: 100vh;
+		height: 100%;
 		background-color: #fff;
+		
 		.page-content {
-			margin-top: 50%;
-			padding: 0 39.2rpx;
+			padding: 400rpx 40rpx 0 40rpx;
 			.exchange-title {
 				font-size: 44.8rpx;
 				font-weight: 600;

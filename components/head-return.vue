@@ -45,10 +45,15 @@ export default {
 
 <style lang="scss" scoped>
 .page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 140rpx;
+  z-index: 2;
   background-color: #fff;
   border-bottom: 1rpx solid #D9D9D9;
   .page-header-back {

@@ -110,7 +110,7 @@ export default {
 			
 			// 分页参数
 			page: 0,
-			pageSize: 10,
+			pageSize: 6,
 			total: 0,
 			
 			// 状态
@@ -450,7 +450,7 @@ export default {
 		
 
 		.message-group {
-			margin-bottom: 40rpx;
+			margin-bottom: 30rpx;
 			.session-divider {
 				display: flex;
 				justify-content: center;
@@ -461,7 +461,7 @@ export default {
 				}
 			}
 			.message-item {
-				margin-bottom: 30rpx;
+				margin-bottom: 25rpx;
 				flex: 1;
 				.message-wrapper {
 					display: flex;

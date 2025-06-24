@@ -1645,6 +1645,7 @@ export default {
 .provisioning-container {
 	min-height: 100vh;
 	position: relative;
+	padding-top: 180rpx;
 }
 
 /* 返回按钮 */

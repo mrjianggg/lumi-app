@@ -48,7 +48,7 @@
 <style scoped lang="scss">
 	.page-main {
 		.page-content{
-			padding: 54.1rpx 40rpx 40rpx 40rpx; /* 底部增加TabBar预留空间 */
+			padding: 200rpx 40rpx 40rpx 40rpx; /* 底部增加TabBar预留空间 */
 			.device-list{
 				.device-list-item{
 					margin-bottom: 30rpx;

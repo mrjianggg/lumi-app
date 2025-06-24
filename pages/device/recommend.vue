@@ -275,7 +275,7 @@
 <style scoped lang="scss">
 	.role-page {
 		.page-content{
-			padding: 74.6rpx 74.6rpx 220rpx 74.6rpx; /* 底部增加TabBar预留空间 */
+			padding: 200rpx 40rpx 220rpx 40rpx; /* 底部增加TabBar预留空间 */
             .content-item-play {
                 /* 背景色和边框色现在通过动态样式设置 */
             }

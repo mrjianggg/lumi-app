@@ -64,12 +64,11 @@
 
 <style lang="scss" scoped>
 	.page-main {
-		min-height: 100vh;
+		height: 100%;
 		background-color: #fff;
 		position: relative;
 		.page-content {
-			margin-top: 59.7rpx;
-			padding: 0 39.2rpx;
+			padding: 400rpx 40rpx 0 40rpx;
 			.menu-section {
 				background: #F5F5F5;
 				margin-top: 59.7rpx;

@@ -134,7 +134,7 @@
 		background-color: #fff;
 		position: relative;
 		.page-content {
-			padding: 0 39.2rpx;
+			padding: 200rpx 40rpx 0 40rpx;
 			.profile-box{
 				position: relative;
 				margin-left: 50%;

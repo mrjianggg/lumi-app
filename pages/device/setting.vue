@@ -320,7 +320,7 @@
 <style lang="scss">
 	.role-page {
 		.page-content{
-			padding: 0 40rpx 220rpx 40rpx; /* 底部增加TabBar预留空间 */
+			padding: 180rpx 40rpx 220rpx 40rpx; /* 底部增加TabBar预留空间 */
 			.device-info{
 				margin-top: 67.2rpx;
 				display: flex;
