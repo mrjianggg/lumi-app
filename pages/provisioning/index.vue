@@ -811,14 +811,14 @@ export default {
 			
 			// 蓝牙状态简化显示
 			if (!this.permissionStatus.bluetooth) {
-				details.push('蓝牙✗(未开启)');
+				details.push('蓝牙(未开启)');
 			}
 			
 			// 网络状态
-			if (!this.permissionStatus.network) details.push('网络✗(未连接)');
+			if (!this.permissionStatus.network) details.push('网络(未连接)');
 			
 			// WiFi状态
-			if (!this.permissionStatus.wifi) details.push('WiFi✗(未开启)');
+			if (!this.permissionStatus.wifi) details.push('WiFi(未开启)');
 			
 			return details.join(' ');
 		},
@@ -1645,7 +1645,6 @@ export default {
 .provisioning-container {
 	min-height: 100vh;
 	position: relative;
-	padding-top: var(--status-bar-height);
 }
 
 /* 返回按钮 */

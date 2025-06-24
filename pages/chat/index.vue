@@ -1,5 +1,5 @@
 <template>
-	<view class="chat-container" :style="{backgroundColor: deviceList.length === 0 ? '#F5F5F5' : '#FFF'}">
+	<view class="chat-container" :style="{paddingTop: statusBarHeight - 18 + 'rpx', backgroundColor: deviceList.length === 0 ? '#F5F5F5' : '#FFF'}">
 		<view class="add-device-content" v-if="deviceList.length === 0">
 			<view class="add-device-card" @click="goToDevice">
 				<image class="add-device-img" src="/static/img/Add_square.png"  mode="widthFix"></image>
@@ -8,7 +8,7 @@
 		</view>
 		<!-- 顶部设备选择 -->
 		<view class="header" v-if="deviceList.length > 0">
-			<view class="device-selector" @click="showDeviceSelector = true">
+			<view class="device-selector" :style="{border: showDeviceSelector ? '1px solid #fff' : '1px solid #D9D9D9'}" @click="showDeviceSelector = true">
 				<view class="device-name">{{ currentDevice.alias || currentDevice.macAddress }}</view>
 				<image src="/static/icon/select-icon.svg" class="dropdown-icon"></image>
 			</view>
@@ -32,7 +32,7 @@
 		<view v-if="showDeviceSelector" class="mask" @click="showDeviceSelector = false"></view>
 		
 		<!-- 聊天记录列表 -->
-		<z-paging ref="paging" refresher-only @onRefresh="onRefresh" class="chat-list" v-if="deviceList.length > 0">
+		<z-paging ref="paging" refresher-only @onRefresh="onRefresh" class="chat-list" :style="{marginTop: 80 + statusBarHeight + 'rpx'}" v-if="deviceList.length > 0">
 			<!-- 页面内容 -->
 			<view v-for="(message, index) in chatList" :key="index" class="message-group">
 				<!-- 会话时间分隔 - 当当前消息与下一条消息的createDate不同时显示 -->
@@ -116,7 +116,8 @@ export default {
 			// 状态
 			loading: false,
 			refresherTriggered: false,
-			noMore: false
+			noMore: false,
+			statusBarHeight: 0
 		}
 	},
 	
@@ -136,6 +137,7 @@ export default {
 	mounted() {
 		// 页面加载时初始化数据
 		this.getDeviceList();
+		this.statusBarHeight = uni.getStorageSync('statusBarHeight')
 	},
 	
 	onShow() {
@@ -368,7 +370,7 @@ export default {
 	}
 	.header {
 		position: relative;
-		z-index: 100;
+		z-index: 902;
 		padding: 52rpx 52rpx 10rpx 52rpx;
 		.device-selector {
 			display: flex;
@@ -377,7 +379,6 @@ export default {
 			padding: 0 44.8rpx;
 			width: 296.6rpx;
 			height: 85.8rpx;
-			border: 1px solid #D9D9D9;
 			border-radius: 50rpx;
 			.device-name {
 				color: #1E1E1E;
@@ -405,7 +406,7 @@ export default {
 			border-radius: 20rpx;
 			box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
 			overflow: hidden;
-			z-index: 1000;
+			z-index: 903;
 			.device-option {
 				display: flex;
 				align-items: center;
@@ -440,12 +441,13 @@ export default {
 		left: 0;
 		right: 0;
 		bottom: 0;
-		z-index: 99;
+		z-index: 901;
+		background-color: rgba(0, 0, 0, 0.2);
 	}
 	.chat-list {
 		flex: 1;
 		padding: 52rpx 52rpx 152rpx 52rpx;
-		margin-top: 100rpx;
+		
 
 		.message-group {
 			margin-bottom: 40rpx;

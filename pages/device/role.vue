@@ -217,6 +217,12 @@
 								font-size: 26.1rpx;
 								font-weight: 400;
 								color: #757575;
+								//最多显示5行，超出显示省略号
+								display: -webkit-box;
+								-webkit-line-clamp: 5;
+								-webkit-box-orient: vertical;
+								overflow: hidden;
+								text-overflow: ellipsis;
 							}
 						}
 					}

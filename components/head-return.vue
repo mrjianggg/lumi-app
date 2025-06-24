@@ -1,5 +1,5 @@
 <template>
-  <view class="page-header">
+  <view class="page-header" :style="{paddingTop: statusBarHeight + 'rpx'}">
     <image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
     <view class="page-header-title">
       <text>{{ title }}</text>
@@ -23,14 +23,14 @@ export default {
   },
   data() {
     return {
-
+      statusBarHeight: 0
     }
   },
   watch: {
 
   },
   mounted() {
-
+    this.statusBarHeight = uni.getStorageSync('statusBarHeight')
   },
   methods: {
     goBack() {
@@ -51,7 +51,6 @@ export default {
   height: 140rpx;
   background-color: #fff;
   border-bottom: 1rpx solid #D9D9D9;
-  padding-top: 20rpx;
   .page-header-back {
     margin-left: 30rpx;
     width: 44.8rpx;

@@ -100,7 +100,8 @@
 						// 根据接口返回的数据结构更新头像
 						if (response.data && response.data.avatarUrl) {
 							// 更新本地存储的用户信息
-							this.userInfo.avatarUrl = response.data.avatarUrl;
+							this.userInfo.avatar = response.data.avatarUrl;
+							console.log('11111==',BASE_URL + this.userInfo.avatar);
 							uni.setStorageSync('userInfo', this.userInfo);
 						}
 						
