@@ -160,10 +160,14 @@
 		}
 	}],
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
+		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#fff",
-		"backgroundColor": "#fff"
+		"backgroundColor": "#fff",
+		"app-plus": {
+			"titleNView": false,
+			"statusBarStyle": "dark"
+		}
 	},
 
 	"uniIdRouter": {}

@@ -16,6 +16,12 @@
             "autoclose" : true,
             "delay" : 0
         },
+        /* 状态栏配置 */
+        "statusbar" : {
+            "immersed" : "supportedDevice",
+            "style" : "dark",
+            "background" : "transparent"
+        },
         /* 模块配置 */
         "modules" : {
             "Geolocation" : {},
