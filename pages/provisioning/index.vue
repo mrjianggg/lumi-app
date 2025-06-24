@@ -833,7 +833,7 @@ export default {
 		},
 		// 开始扫描蓝牙
 		startScanningBle() {
-			console.log('准备开始蓝牙扫描...');
+			console.log('准备开始蓝牙扫描...----------');
 			console.log('当前状态:', {
 				bluetooth: this.permissionStatus.bluetooth,
 				network: this.permissionStatus.network,
