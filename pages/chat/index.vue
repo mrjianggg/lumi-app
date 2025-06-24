@@ -296,7 +296,7 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 0 50rpx;
+	padding: 0rpx 50rpx 96rpx 50rpx;
 	position: relative;
 
 	.add-device-nav {
