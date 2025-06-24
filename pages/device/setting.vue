@@ -125,6 +125,7 @@
 				sliderChangingValue: 0,
 				showEditModal: false,
 				deviceInfo: {},
+				oldDeviceInfo: {},
 			}
 		},
 		computed: {
@@ -154,6 +155,7 @@
 		mounted() {
 			this.deviceInfo = uni.getStorageSync('currentDevice');
 			this.sliderChangingValue = this.voiceValue = this.deviceInfo.volumeLevel;
+			this.oldDeviceInfo = JSON.parse(JSON.stringify(this.deviceInfo));
 			console.log('deviceInfo===',this.deviceInfo);
 		},
 		methods: {
@@ -170,6 +172,9 @@
 				if(e && typeof e === 'number'){
 					this.deviceInfo.gender = e;
 				}
+				if(this.deviceInfo.ownerName === this.oldDeviceInfo.ownerName && this.deviceInfo.birthday === this.oldDeviceInfo.birthday && this.deviceInfo.gender === this.oldDeviceInfo.gender){
+					return;
+				}
 				console.log('保存数据:', {
 					ownerName: this.deviceInfo.ownerName,
 					birthday: this.deviceInfo.birthday,
@@ -182,6 +187,7 @@
 				}).then(res => {
 					if(res.code === 0){
 						uni.setStorageSync('currentDevice', this.deviceInfo);
+						this.oldDeviceInfo = JSON.parse(JSON.stringify(this.deviceInfo));
 						uni.showToast({
 							title: '修改成功',
 							icon: 'success'
