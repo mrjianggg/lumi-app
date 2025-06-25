@@ -95,10 +95,10 @@
 			// 标签点击
 			onLabelClick(item) {
 				console.log(item.label);
-				if(this.deviceInfo.userPrompt){
+				if(this.deviceInfo.userPrompt && this.deviceInfo.userPrompt !== 'null'){
 					this.deviceInfo.userPrompt = this.deviceInfo.userPrompt + ';' + item.label;
 				}else{
-					this.deviceInfo.userPrompt += item.label;
+					this.deviceInfo.userPrompt = item.label;
 				}
 			}
 		}

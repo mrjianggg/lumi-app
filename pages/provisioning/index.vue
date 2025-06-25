@@ -1284,7 +1284,7 @@ export default {
 						this.isConnecting = false;
 						
 						uni.showToast({
-							title: 'WiFi配置推送成功',
+							title: 'WiFi推送成功',
 							icon: 'success'
 						});
 						

@@ -26,7 +26,8 @@
         "modules" : {
             "Geolocation" : {},
             "Bluetooth" : {},
-            "Camera" : {}
+            "Camera" : {},
+            "OAuth" : {}
         },
         /* 应用发布信息 */
         "distribute" : {
@@ -67,6 +68,13 @@
                     "NSCameraUsageDescription" : "需要访问您的相机来拍摄和上传头像",
                     "NSPhotoLibraryUsageDescription" : "需要访问您的相册来选择和上传图片",
                     "NSPhotoLibraryAddUsageDescription" : "需要访问您的相册来保存图片"
+                },
+                "capabilities" : {
+                    "entitlements" : {
+                        "com.apple.developer.associated-domains" : [
+                            "applinks:static-mp-9229c339-7a78-456c-9a94-9e8389a006b1.next.bspapp.com"
+                        ]
+                    }
                 }
             },
             /* SDK配置 */
@@ -76,7 +84,12 @@
                         "__platform__" : [ "ios", "android" ]
                     }
                 },
-                "oauth" : {}
+                "oauth" : {
+                    "weixin" : {
+                        "appid" : "wxb69142fc8e996ffe",
+                        "UniversalLinks" : "https://static-mp-9229c339-7a78-456c-9a94-9e8389a006b1.next.bspapp.com/uni-universallinks/__UNI__151B7AA/"
+                    }
+                }
             },
             "icons" : {
                 "android" : {
@@ -151,5 +164,6 @@
         "enable" : false
     },
     "vueVersion" : "3",
-    "fallbackLocale" : "zh-Hans"
+    "fallbackLocale" : "zh-Hans",
+    "_spaceID" : "mp-9229c339-7a78-456c-9a94-9e8389a006b1"
 }

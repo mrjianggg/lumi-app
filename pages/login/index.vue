@@ -61,7 +61,7 @@
 					<text>Login with Google</text>
 				</view>
 				
-				<view class="weixin-login-btn" @click="loginWithApple">
+				<view class="weixin-login-btn" @click="loginWithWechat">
 					<image src="/static/icon/weixin.svg" mode="widthFix" class="apple-icon"></image>
 					<text>Log In with Wechat</text>
 				</view>
@@ -94,6 +94,7 @@
 <script>
 	import CountryModal from '@/components/country-modal.vue'
 	import http from '@/utils/request.js'
+	import WechatAuth from '@/utils/wechat-auth.js'
 
 	export default {
 		components: {
@@ -101,8 +102,8 @@
 		},
 		data() {
 			return {
-				phoneNumber: '',
-				verificationCode: '',
+				phoneNumber: '13800138000',
+				verificationCode: '5948',
 				countdown: 0,
 				countdownTimer: null,
 				showCountryModal: false,
@@ -218,6 +219,66 @@
 					title: 'Google登录功能开发中',
 					icon: 'none'
 				});
+			},
+			
+			// 微信登录
+			async loginWithWechat() {
+				try {
+					uni.showLoading({
+						title: '微信登录中...'
+					});
+					
+					// 使用微信登录工具类
+					const authResult = await WechatAuth.login();
+					console.log('微信授权结果:', authResult);
+					
+					// 调用后端接口验证微信登录
+					const loginResult = await http.post('/auth/wechat', {
+						platform: authResult.platform,
+						code: authResult.code,
+						access_token: authResult.access_token,
+						openid: authResult.openid,
+						unionid: authResult.unionid,
+						userInfo: authResult.userInfo
+					});
+					
+					uni.hideLoading();
+					
+					if (loginResult.code === 0) {
+						// 保存用户信息和token
+						uni.setStorageSync('token', loginResult.data.token);
+						if (loginResult.data.userInfo) {
+							uni.setStorageSync('userInfo', loginResult.data.userInfo);
+						}
+						
+						uni.showToast({
+							title: '登录成功',
+							icon: 'success'
+						});
+						
+						// 跳转到首页
+						setTimeout(() => {
+							uni.reLaunch({
+								url: '/pages/tabbar-container/index?tab=0'
+							});
+						}, 1000);
+					} else {
+						uni.showToast({
+							title: loginResult.msg || '微信登录失败',
+							icon: 'none'
+						});
+					}
+					
+				} catch (error) {
+					uni.hideLoading();
+					console.error('微信登录错误:', error);
+					
+					// 显示错误信息
+					uni.showToast({
+						title: error.message || '微信登录失败，请重试',
+						icon: 'none'
+					});
+				}
 			},
 			
 			// Apple登录

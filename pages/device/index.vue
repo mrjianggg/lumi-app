@@ -589,7 +589,7 @@
 	/* 内容推荐 */
 	.content-section {
 		margin-top: 40rpx;
-		min-height: 400rpx;
+		min-height: 280rpx;
 		border: 1px solid #D9D9D9;
 		border-radius: 59.7rpx;
 		padding: 0 40rpx;
