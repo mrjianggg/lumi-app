@@ -23,7 +23,7 @@ export default {
 				// 添加最小加载时间，避免闪烁
 				await this.delay(1000)
 				
-				// uni.setStorageSync('token', '45b5b34a5ea185e1223f387406fe032c')  // 测试后删除
+				uni.setStorageSync('token', '45b5b34a5ea185e1223f387406fe032c')  // 测试后删除
 
 				
 				const token = uni.getStorageSync('token')
