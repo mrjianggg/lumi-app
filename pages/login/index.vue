@@ -233,24 +233,13 @@
 					console.log('微信授权结果:', authResult);
 					
 					// 调用后端接口验证微信登录
-					const loginResult = await http.post('/auth/wechat', {
-						platform: authResult.platform,
-						code: authResult.code,
-						access_token: authResult.access_token,
-						openid: authResult.openid,
-						unionid: authResult.unionid,
-						userInfo: authResult.userInfo
-					});
-					
+					const loginResult = await http.get('/user/wechat/callback?code='+authResult.code);
+					console.log('微信登录结果----:', loginResult);
 					uni.hideLoading();
 					
 					if (loginResult.code === 0) {
 						// 保存用户信息和token
 						uni.setStorageSync('token', loginResult.data.token);
-						if (loginResult.data.userInfo) {
-							uni.setStorageSync('userInfo', loginResult.data.userInfo);
-						}
-						
 						uni.showToast({
 							title: '登录成功',
 							icon: 'success'

@@ -62,7 +62,11 @@ class WechatAuth {
 							reject(new Error('微信客户端未安装或不可用'));
 							return;
 						}
-						
+						try {
+							service.forbid(); // 关键代码：清除本地授权缓存
+						} catch (e) {
+							console.warn('清除授权缓存失败:', e);
+						}
 						// 安卓平台特殊处理
 						// #ifdef APP-PLUS-NVUE
 						console.log('当前平台: NVUE');
@@ -77,10 +81,13 @@ class WechatAuth {
 							scope: 'snsapi_userinfo'
 						};
 						
-						// 安卓平台使用最简配置，不添加额外参数
+						// 安卓平台
 						if (platform === 'Android') {
-							console.log('安卓平台，使用最简配置');
-							// 移除所有可能干扰的额外参数
+							authOptions.confirm = true; // 强制显示授权确认
+							authOptions.forceLogin = true;  // 强制显示授权界面
+							authOptions.fastLogin = false;  // 禁用快速登录
+							// 添加随机state参数防止缓存
+							authOptions.state = 'anti_cache_' + Date.now() + Math.random().toString(36).substr(2);
 						}
 						
 						console.log('授权参数:', authOptions);
@@ -129,6 +136,7 @@ class WechatAuth {
 								platform: plus.os.name
 							}));
 						}, authOptions);
+						uni.hideLoading();
 						console.log(222222222);
 						return;
 					}
