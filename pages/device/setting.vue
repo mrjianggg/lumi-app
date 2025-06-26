@@ -1,6 +1,6 @@
 <template>
 	<view class="role-page">
-		<head-return :toPage="0" title=""></head-return>
+		<head-return :toPage="0" title="设置"></head-return>
 		<view class="page-content">
 			<view class="device-info">
 				<view class="device-info-left">

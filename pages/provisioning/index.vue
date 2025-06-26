@@ -1003,14 +1003,16 @@ export default {
 									title: '绑定成功',
 									icon: 'success'
 								});
-								if(!this.foundDevice.name.includes('NamyAI')){ // 非NamyAI设备走配网流程
+								if(this.foundDevice.name && this.foundDevice.name.includes('NamyAI')){
+									// NamyAI设备绑定成功则写入设备
+									await this.writeCharacteristic();
+								}else{
+									// 非NamyAI设备走配网流程
 									this.setPopActive = false;
 									this.currentStage = 'wifiConfig';
 									this.provisioningPage = 1;
 									this.pushStep('wifiConfig');
 									this.scanWifiNetworks();
-								}else{ // NamyAI设备绑定成功则写入设备
-									await this.writeCharacteristic();
 								}
 								uni.hideLoading();
 
@@ -1041,7 +1043,7 @@ export default {
 			uni.showLoading({
 				title: '连接中...'
 			});
-			if(this.foundDevice.name.includes('NamyAI')){ // 'NamyAI'的设备不用设置POP
+			if(this.foundDevice.name && this.foundDevice.name.includes('NamyAI')){ // 'NamyAI'的设备不用设置POP
 				uni.createBLEConnection({
 					deviceId: this.foundDevice.deviceId,
 					success: (res) => {
@@ -1106,7 +1108,7 @@ export default {
 		},
 		// 断开连接
 		disconnectDevice() {
-			if(this.foundDevice.name.includes('NamyAI')){
+			if(this.foundDevice.name && this.foundDevice.name.includes('NamyAI')){
 				uni.closeBLEConnection({
 					deviceId: this.foundDevice.deviceId
 				});

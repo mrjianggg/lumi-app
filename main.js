@@ -1,6 +1,10 @@
 import App from './App'
 import http from './utils/request.js'
 
+// 导入字体
+import '@fontsource/inter'
+import '@fontsource/noto-sans-sc'
+
 // #ifndef VUE3
 import Vue from 'vue'
 import './uni.promisify.adaptor'

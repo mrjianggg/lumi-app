@@ -94,7 +94,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 900;
-  padding: 0 20rpx 20rpx 20rpx;
+  padding: 0 20rpx 40rpx 20rpx;
   pointer-events: none;
   .custom-tabbar {
     background: #fff;

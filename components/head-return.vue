@@ -1,6 +1,6 @@
 <template>
-  <view class="page-header" :style="{paddingTop: statusBarHeight + 'rpx'}">
-    <image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
+  <view class="page-header" :style="{paddingTop: statusBarHeight + 10 + 'rpx'}" @click="goBack">
+    <image src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
     <view class="page-header-title">
       <text>{{ title }}</text>
     </view>
@@ -63,7 +63,7 @@ export default {
   }
 
   .page-header-title {
-    font-size: 44.8rpx;
+    font-size: 29.9rpx;
     font-weight: 400;
     color: #303030;
   }

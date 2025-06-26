@@ -1,5 +1,5 @@
 <template>
-	<view class="device-container" :style="{backgroundColor: currentDeviceIndex === deviceList.length ? '#F5F5F5' : '#FFF'}">
+	<view class="device-container" :style="{paddingTop: statusBarHeight - 10 + 'px', backgroundColor: currentDeviceIndex === deviceList.length ? '#F5F5F5' : '#FFF'}">
 		<!-- 设备轮播容器 -->
 		<swiper class="device-swiper" :style="{ height: swiperHeight }" :current="currentDeviceIndex"
 			@change="onSwiperChange" :duration="300" :indicator-dots="false" :autoplay="false" :circular="false">
@@ -140,7 +140,8 @@
 				// 当前选中内容的颜色配对
 				currentColorPair: { background: '#FFE8A3', icon: '#FF9B21' },
 				deviceList: [],
-				recommendList: []
+				recommendList: [],
+				statusBarHeight: 0
 			}
 		},
 		computed: {
@@ -174,6 +175,7 @@
 			this.handlePageShow();
 		},
 		mounted() {
+			this.statusBarHeight = uni.getStorageSync('statusBarHeight')
 			console.log('mounted1111');
 			// 组件挂载时也计算高度（用于作为组件使用的情况）
 			this.$nextTick(() => {
