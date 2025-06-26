@@ -1,9 +1,9 @@
 {
-    "name" : "namy-app",
+    "name" : "Namyvera",
     "appid" : "__UNI__151B7AA",
     "description" : "",
-    "versionName" : "1.0.2",
-    "versionCode" : "101",
+    "versionName" : "1.0.3",
+    "versionCode" : 102,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
@@ -73,7 +73,8 @@
                     "entitlements" : {
                         "com.apple.developer.associated-domains" : [
                             "applinks:static-mp-9229c339-7a78-456c-9a94-9e8389a006b1.next.bspapp.com"
-                        ]
+                        ],
+                        "com.apple.developer.applesignin" : [ "Default" ]
                     }
                 }
             },
@@ -88,6 +89,9 @@
                     "weixin" : {
                         "appid" : "wxb69142fc8e996ffe",
                         "UniversalLinks" : "https://static-mp-9229c339-7a78-456c-9a94-9e8389a006b1.next.bspapp.com/uni-universallinks/__UNI__151B7AA/"
+                    },
+                    "apple" : {
+                        "bundleId" : "com.namyvera.app"
                     }
                 }
             },

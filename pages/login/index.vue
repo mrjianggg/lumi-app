@@ -66,7 +66,7 @@
 					<text>Log In with Wechat</text>
 				</view>
 
-				<view class="apple-login-btn" @click="loginWithApple">
+				<view class="apple-login-btn" @click="loginWithApple" v-if="osName === 'iOS'">
 					<image src="/static/icon/AppleLogo.svg" mode="widthFix" class="apple-icon"></image>
 					<text>Login with Apple</text>
 				</view>
@@ -95,6 +95,7 @@
 	import CountryModal from '@/components/country-modal.vue'
 	import http from '@/utils/request.js'
 	import WechatAuth from '@/utils/wechat-auth.js'
+	import AppleAuth from '@/utils/apple-auth.js'
 
 	export default {
 		components: {
@@ -110,10 +111,13 @@
 				selectedCountry: {
 					name: '中国',
 					code: '+86'
-				}
+				},
+				osName: ''
 			};
 		},
-
+		onLoad() {
+			this.osName = plus.os.name;
+		},
 		
 		methods: {
 			// 显示国家选择器
@@ -271,11 +275,80 @@
 			},
 			
 			// Apple登录
-			loginWithApple() {
-				uni.showToast({
-					title: 'Apple登录功能开发中',
-					icon: 'none'
-				});
+			async loginWithApple() {
+				try {
+					// 首先检查苹果登录是否可用
+					const isAvailable = await AppleAuth.checkAppleSignInAvailable();
+					if (!isAvailable) {
+						uni.showModal({
+							title: '提示',
+							content: '苹果登录仅支持iOS 13.0及以上版本的设备',
+							showCancel: false
+						});
+						return;
+					}
+					
+					uni.showLoading({
+						title: '苹果登录中...'
+					});
+					
+					// 使用苹果登录工具类
+					const authResult = await AppleAuth.login();
+					console.log('苹果授权结果:', authResult);
+					
+					// 调用后端接口验证苹果登录
+					// 发送身份令牌到后端进行验证
+					const loginParams = {
+						identityToken: authResult.identityToken,
+						authorizationCode: authResult.authorizationCode,
+						userIdentifier: authResult.userIdentifier,
+						email: authResult.email,
+						fullName: authResult.fullName,
+						realUserStatus: authResult.realUserStatus
+					};
+					
+					const loginResult = await http.post('/user/apple/callback', loginParams);
+					console.log('苹果登录结果:', loginResult);
+					uni.hideLoading();
+					
+					if (loginResult.code === 0) {
+						// 保存用户信息和token
+						uni.setStorageSync('token', loginResult.data.token);
+						uni.showToast({
+							title: '登录成功',
+							icon: 'success'
+						});
+						
+						// 跳转到首页
+						setTimeout(() => {
+							uni.reLaunch({
+								url: '/pages/tabbar-container/index?tab=0'
+							});
+						}, 1000);
+					} else {
+						uni.showToast({
+							title: loginResult.msg || '苹果登录失败',
+							icon: 'none'
+						});
+					}
+					
+				} catch (error) {
+					uni.hideLoading();
+					console.error('苹果登录错误:', error);
+					
+					// 根据错误类型显示不同的提示
+					let errorMessage = '苹果登录失败，请重试';
+					if (error.message.includes('用户取消')) {
+						errorMessage = '您取消了苹果登录';
+					} else if (error.message.includes('不支持')) {
+						errorMessage = '当前设备不支持苹果登录';
+					}
+					
+					uni.showToast({
+						title: errorMessage,
+						icon: 'none'
+					});
+				}
 			},
 			
 			// 打开服务条款
