@@ -367,19 +367,14 @@
 					// 使用苹果登录工具类
 					const authResult = await AppleAuth.login();
 					console.log('苹果授权结果:', authResult);
+
+					if(!authResult || !authResult.originalResult || !authResult.originalResult.target || !authResult.originalResult.target.appleInfo || !authResult.originalResult.target.appleInfo.identityToken){
+						this.$toast.error('苹果授权登录失败');
+						return;
+					}
 					
-					// 调用后端接口验证苹果登录
 					// 发送身份令牌到后端进行验证
-					const loginParams = {
-						identityToken: authResult.identityToken,
-						authorizationCode: authResult.authorizationCode,
-						userIdentifier: authResult.userIdentifier,
-						email: authResult.email,
-						fullName: authResult.fullName,
-						realUserStatus: authResult.realUserStatus
-					};
-					
-					const loginResult = await http.post('/user/apple/callback', loginParams);
+					const loginResult = await http.get('/user/apple/callback?identityToken='+authResult.originalResult.target.appleInfo.identityToken);
 					console.log('苹果登录结果:', loginResult);
 					uni.hideLoading();
 					
