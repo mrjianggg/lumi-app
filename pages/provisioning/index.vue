@@ -2,7 +2,7 @@
 	<view class="provisioning-container">
 		<!-- 返回按钮 -->
 		<head-return :toPage="0" title=""></head-return>
-
+		
 		<!-- <view class="page-header" v-else>
 			<image @click="goBack" src="/static/icon/head-return.svg" mode="widthFix" class="page-header-back"></image>
 			<view class="page-header-title">
@@ -602,37 +602,22 @@ export default {
 				}, 5000);
 				
 				// 尝试初始化蓝牙适配器
-				uni.openBluetoothAdapter({
-					success: (res) => {
-						console.log('蓝牙适配器初始化成功');
-						// 获取蓝牙状态
-						uni.getBluetoothAdapterState({
-							success: (stateRes) => {
-								clearTimeout(timeout);
-								console.log('蓝牙状态:', stateRes);
-								// 检查蓝牙是否可用且已开启
-								if (stateRes.available && stateRes.discovering !== undefined) {
-									console.log('✅ 蓝牙已开启');
-									resolve(true);
-								} else {
-									console.log('❌ 蓝牙未开启');
-									resolve(false);
-								}
-							},
-							fail: (err) => {
-								clearTimeout(timeout);
-								console.log('获取蓝牙状态失败:', err);
-								resolve(false);
-							}
-						});
+				uni.getBluetoothAdapterState({
+					success: (stateRes) => {
+						clearTimeout(timeout);
+						console.log('蓝牙状态:', stateRes);
+						// 检查蓝牙是否可用且已开启
+						if (stateRes.available && stateRes.discovering !== undefined) {
+							console.log('✅ 蓝牙已开启');
+							resolve(true);
+						} else {
+							console.log('❌ 蓝牙未开启');
+							resolve(false);
+						}
 					},
 					fail: (err) => {
 						clearTimeout(timeout);
-						console.log('蓝牙适配器初始化失败:', err);
-						// 错误码10001表示蓝牙未打开
-						if (err.errCode === 10001) {
-							console.log('❌ 蓝牙未打开');
-						}
+						console.log('获取蓝牙状态失败:', err);
 						resolve(false);
 					}
 				});

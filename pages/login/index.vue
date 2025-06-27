@@ -96,6 +96,7 @@
 	import http from '@/utils/request.js'
 	import WechatAuth from '@/utils/wechat-auth.js'
 	import AppleAuth from '@/utils/apple-auth.js'
+	import GoogleAuth from '@/utils/google-auth.js'
 
 	export default {
 		components: {
@@ -218,11 +219,90 @@
 			},
 			
 			// Google登录
-			loginWithGoogle() {
-				uni.showToast({
-					title: 'Google登录功能开发中',
-					icon: 'none'
-				});
+			async loginWithGoogle() {
+				try {
+					// 首先检查Google登录是否可用
+					const isAvailable = await GoogleAuth.checkGoogleSignInAvailable();
+					if (!isAvailable) {
+						uni.showModal({
+							title: '提示',
+							content: 'Google登录服务不可用，请检查网络连接和配置',
+							showCancel: false
+						});
+						return;
+					}
+					
+					uni.showLoading({
+						title: 'Google登录中...'
+					});
+					
+					// 使用Google登录工具类
+					const authResult = await GoogleAuth.login();
+					console.log('Google授权结果:', authResult);
+					
+					// 调用后端接口验证Google登录
+					const loginParams = {
+						access_token: authResult.access_token,
+						id_token: authResult.id_token,
+						code: authResult.code,
+						userInfo: authResult.userInfo
+					};
+					
+					const loginResult = await http.post('/user/google/callback', loginParams);
+					console.log('Google登录结果:', loginResult);
+					uni.hideLoading();
+					
+					if (loginResult.code === 0) {
+						// 保存用户信息和token
+						uni.setStorageSync('token', loginResult.data.token);
+						
+						// 保存Google访问令牌（用于后续API调用）
+						if (authResult.access_token) {
+							uni.setStorageSync('google_access_token', authResult.access_token);
+						}
+						
+						uni.showToast({
+							title: '登录成功',
+							icon: 'success'
+						});
+						
+						// 跳转到首页
+						setTimeout(() => {
+							uni.reLaunch({
+								url: '/pages/tabbar-container/index?tab=0'
+							});
+						}, 1000);
+					} else {
+						uni.showToast({
+							title: loginResult.msg || 'Google登录失败',
+							icon: 'none'
+						});
+					}
+					
+				} catch (error) {
+					uni.hideLoading();
+					console.error('Google登录错误:', error);
+					
+					// 根据错误类型显示不同的提示
+					let errorMessage = 'Google登录失败，请重试';
+					
+					if (error.message.includes('用户取消')) {
+						errorMessage = '您取消了Google登录';
+					} else if (error.message.includes('不支持')) {
+						errorMessage = '当前设备不支持Google登录';
+					} else if (error.message.includes('配置错误') || error.code === -1002) {
+						errorMessage = 'Google登录配置错误';
+					} else if (error.message.includes('网络')) {
+						errorMessage = '网络连接失败，请检查网络';
+					} else if (error.code === -1002 || error.code === 7) {
+						errorMessage = 'Google OAuth配置错误';
+					}
+				
+					uni.showToast({
+						title: errorMessage,
+						icon: 'none'
+					});
+				}
 			},
 			
 			// 微信登录
