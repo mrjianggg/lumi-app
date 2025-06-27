@@ -111,6 +111,7 @@
 				</view>
 			</view>
 		</view>
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -188,10 +189,7 @@
 					if(res.code === 0){
 						uni.setStorageSync('currentDevice', this.deviceInfo);
 						this.oldDeviceInfo = JSON.parse(JSON.stringify(this.deviceInfo));
-						uni.showToast({
-							title: '修改成功',
-							icon: 'success'
-						})
+						this.$toast.success('修改成功')
 					}else{
 						uni.showToast({
 							title: res.message,
@@ -230,10 +228,7 @@
 					if(res.code === 0){
 						this.deviceInfo.volumeLevel = e.detail.value;
 						uni.setStorageSync('currentDevice', this.deviceInfo);
-						uni.showToast({
-							title: '设置成功',
-							icon: 'success'
-						})
+						this.$toast.success('设置成功')
 					}else{
 						uni.showToast({
 							title: res.message,
@@ -264,10 +259,7 @@
 								deviceId: this.deviceInfo.id
 							}).then(res => {
 								if(res.code === 0){
-									uni.showToast({
-										title: '删除成功',
-										icon: 'success'
-									})
+									this.$toast.success('删除成功')
 									// 返回到TabBar容器的设备页面
 									uni.reLaunch({
 										url: '/pages/tabbar-container/index?tab=0'
@@ -301,10 +293,7 @@
 					if(res.code === 0){
 						uni.setStorageSync('currentDevice', this.deviceInfo);
 						this.showEditModal = false;
-						uni.showToast({
-							title: '设置成功',
-							icon: 'success'
-						})
+						this.$toast.success('设置成功')
 					}else{
 						uni.showToast({
 							title: res.message,

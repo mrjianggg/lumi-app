@@ -24,6 +24,7 @@
 		
 		<!-- 自定义TabBar -->
 		<custom-tabbar :current="0" @change="handleTabChange" />
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -163,10 +164,7 @@
 				switch (status) {
 					case 'SUCCESS':
 						// 播放成功
-						uni.showToast({
-							title: '播放成功',
-							icon: 'success'
-						});
+						this.$toast.success('播放成功');
 						// 可以选择保持加载状态或者重置
 						setTimeout(() => {
 							this.resetPlayState();
@@ -225,14 +223,11 @@
 								this.clearStatusTimer();
 								uni.hideLoading();
 								
-								if (status === 'SUCCESS') {
-									uni.showToast({
-										title: '播放成功',
-										icon: 'success'
-									});
-									setTimeout(() => {
-										this.resetPlayState();
-									}, 2000);
+															if (status === 'SUCCESS') {
+								this.$toast.success('播放成功');
+								setTimeout(() => {
+									this.resetPlayState();
+								}, 2000);
 								} else if (status === 'OFFLINE') {
 									this.handlePlayError('设备离线', contentIndex);
 								} else if (status === 'FAILED') {

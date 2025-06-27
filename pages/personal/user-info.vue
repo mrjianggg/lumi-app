@@ -23,6 +23,7 @@
 		<view class="logout-btn" @click="saveUserInfo">
 			保存修改
 		</view>
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -57,10 +58,7 @@
 				}).then(res => {
 					if(res.code === 0) {
 						uni.setStorageSync('userInfo', this.userInfo);
-						uni.showToast({
-							title: '修改成功',
-							icon: 'success'
-						});
+						this.$toast.success('修改成功');
 					}else{
 						uni.showToast({
 							title: res.msg,
@@ -105,10 +103,7 @@
 							uni.setStorageSync('userInfo', this.userInfo);
 						}
 						
-						uni.showToast({
-							title: '头像更新成功',
-							icon: 'success'
-						});
+						this.$toast.success('头像更新成功');
 					}else{
 						uni.showToast({
 							title: response.msg,

@@ -1,7 +1,5 @@
 <template>
   <view class="test-container">
-    <!-- 直接在页面中引入Toast组件进行测试 -->
-    <app-toast></app-toast>
     <view class="test-header">
       <text class="test-title">自定义Toast</text>
       <text class="test-subtitle">云朵样式提示框</text>
@@ -30,6 +28,7 @@
       <text class="info-text">this.$toast.success('操作成功！')</text>
       <text class="info-text">this.$toast.error('操作失败！')</text>
     </view>
+    <app-toast></app-toast>
   </view>
 </template>
 

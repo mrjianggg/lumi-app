@@ -59,6 +59,7 @@
 				</view>
 			</view>
 		</z-paging>
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -161,10 +162,7 @@ export default {
 				}
 			}).catch(error => {
 				console.error('获取设备列表失败:', error)
-				uni.showToast({
-					title: '获取设备列表失败',
-					icon: 'error'
-				})
+				this.$toast.error('获取设备列表失败')
 			})
 		},
 		// 设备选择
@@ -211,10 +209,7 @@ export default {
 						
 						console.log('this.chatList===', this.chatList);
 						if(this.page > 1){
-							uni.showToast({
-								title: `新增${response.data.list.length}条消息`,
-								icon: 'success'
-							})
+							this.$toast.success(`新增${response.data.list.length}条消息`)
 						}
 
 					} else {
@@ -234,10 +229,7 @@ export default {
 			} catch (error) {
 				console.error('刷新数据失败:', error)
 				this.page --;
-				uni.showToast({
-					title: '刷新失败',
-					icon: 'error'
-				})
+				this.$toast.error('刷新失败')
 			} finally {
 				this.$refs.paging.complete();
 			}

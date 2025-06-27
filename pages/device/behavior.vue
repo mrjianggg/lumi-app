@@ -21,6 +21,7 @@
 		
 		<!-- 自定义TabBar -->
 		<custom-tabbar :current="0" @change="handleTabChange" />
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -80,10 +81,7 @@
 				}).then(res => {
 					if(res.code === 0){
 						uni.setStorageSync('currentDevice', this.deviceInfo);
-						uni.showToast({
-							title: '保存成功',
-							icon: 'success'	
-						});
+						this.$toast.success('保存成功');
 					}else{
 						uni.showToast({
 							title: res.msg,

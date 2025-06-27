@@ -203,6 +203,7 @@
 		<view style="padding: 50rpx;" @click="disconnectDevice">
 			断开设备
 		</view> -->
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -461,10 +462,7 @@ export default {
 						}
 					});
 
-					uni.showToast({
-						title: '读取成功',
-						icon: 'success'
-					});
+					this.$toast.success('读取成功');
 				},
 				fail: (err) => {
 					console.error('读取特征值失败', err);
@@ -950,10 +948,7 @@ export default {
 				if (ret.success) {
 				} else {
 					// 设置POP失败
-					uni.showToast({
-						title: '设置安全密钥 (POP)失败',
-						icon: 'success'
-					});
+					this.$toast.success('设置安全密钥 (POP)失败');
 					this.setPopActive = true;
 				}
 			});
@@ -972,10 +967,7 @@ export default {
 				console.log('/device/bound/{sn}===', res);
 				if(res.code === 0){
 					if(res.data === true){
-						uni.showToast({
-							title: '设备已被绑定',
-							icon: 'error'
-						});
+						this.$toast.error('设备已被绑定');
 						this.scanningFailed = true;
 						this.showReProvisioningDialog = false;
 						// 断开连接
@@ -987,10 +979,7 @@ export default {
 						}).then(async res => {
 							console.log('lumi/device/register===', res);
 							if(res.code === 0){
-								uni.showToast({
-									title: '绑定成功',
-									icon: 'success'
-								});
+								this.$toast.success('绑定成功');
 								if(this.foundDevice.name && this.foundDevice.name.includes('NamyAI')){
 									// NamyAI设备绑定成功则写入设备
 									await this.writeCharacteristic();
@@ -1175,10 +1164,7 @@ export default {
 									});
 									console.log('WiFi列表为空');
 								} else {
-									uni.showToast({
-										title: `发现 ${this.wifiList.length} 个网络`,
-										icon: 'success'
-									});
+									this.$toast.success(`发现 ${this.wifiList.length} 个网络`);
 									console.log(`成功发现 ${this.wifiList.length} 个WiFi网络`);
 									
 									// 打印转换后的WiFi信息
@@ -1276,10 +1262,7 @@ export default {
 						this.provisioningStatus.isWaitingForPairing = true;
 						this.isConnecting = false;
 						
-						uni.showToast({
-							title: 'WiFi推送成功',
-							icon: 'success'
-						});
+						this.$toast.success('WiFi推送成功');
 						
 						return;
 					}
@@ -1320,16 +1303,8 @@ export default {
 			
 			if (result === 'success') {
 				this.currentStage = 'provisioningSuccess';
-				uni.showToast({
-					title: message,
-					icon: 'success'
-				});
+				this.$toast.success(message);
 				
-				// 3秒后可以返回或执行其他操作
-				setTimeout(() => {
-					// 这里可以跳转到成功页面或返回首页
-					console.log('配网成功，可以执行后续操作');
-				}, 3000);
 			} else {
 				this.showReProvisioningDialog = false;
 				this.currentStage = 'provisioningFailed';

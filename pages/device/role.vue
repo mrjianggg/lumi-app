@@ -47,6 +47,7 @@
 		
 		<!-- 自定义TabBar -->
 		<custom-tabbar :current="0" @change="handleTabChange" />
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -91,10 +92,7 @@
 						this.deviceInfo.roleInfo.roleContent = item.roleContent;
 						uni.setStorageSync('currentDevice', this.deviceInfo);
 						this.currentRoleId = item.id;
-						uni.showToast({
-							title: '切换成功',
-							icon: 'success'
-						})
+						this.$toast.success('切换成功')
 					}else{
 						uni.showToast({
 							title: res.message,

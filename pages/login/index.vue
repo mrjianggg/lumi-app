@@ -88,6 +88,8 @@
 			@select="selectCountry"
 			@close="hideCountryPicker"
 		></country-modal>
+
+		<app-toast></app-toast>
 	</view>
 </template>
 
@@ -153,10 +155,7 @@
 					if(res.code === 0){
 						// 开始倒计时
 						this.startCountdown();
-						uni.showToast({
-							title: '验证码已发送',
-							icon: 'success'
-						});
+						this.$toast.success('验证码已发送');
 					}
 				}).catch(err => {
 					console.error('发送验证码失败：', err.message)
@@ -204,14 +203,13 @@
 					if(res.code === 0){
 						uni.hideLoading();
 						uni.setStorageSync('token', res.data.token);
-						uni.showToast({
-							title: '登录成功',
-							icon: 'success'
-						});
+						this.$toast.success('登录成功');
 						// 跳转到首页
-						uni.reLaunch({
-							url: '/pages/tabbar-container/index?tab=0'
-						})
+						setTimeout(() => {
+							uni.reLaunch({
+								url: '/pages/tabbar-container/index?tab=0'
+							});
+						}, 1000);
 					}
 				}).catch(err => {
 					console.error('发送验证码失败：', err.message)
@@ -261,10 +259,7 @@
 							uni.setStorageSync('google_access_token', authResult.access_token);
 						}
 						
-						uni.showToast({
-							title: '登录成功',
-							icon: 'success'
-						});
+						this.$toast.success('登录成功');
 						
 						// 跳转到首页
 						setTimeout(() => {
@@ -324,10 +319,7 @@
 					if (loginResult.code === 0) {
 						// 保存用户信息和token
 						uni.setStorageSync('token', loginResult.data.token);
-						uni.showToast({
-							title: '登录成功',
-							icon: 'success'
-						});
+						this.$toast.success('登录成功');
 						
 						// 跳转到首页
 						setTimeout(() => {
@@ -394,10 +386,7 @@
 					if (loginResult.code === 0) {
 						// 保存用户信息和token
 						uni.setStorageSync('token', loginResult.data.token);
-						uni.showToast({
-							title: '登录成功',
-							icon: 'success'
-						});
+						this.$toast.success('登录成功');
 						
 						// 跳转到首页
 						setTimeout(() => {
