@@ -265,7 +265,9 @@ export default {
 			],
 			service: {},
 			macAddress: '',
-			showReProvisioningDialog: false
+			showReProvisioningDialog: false,
+			ifBleScan: false,
+			ifConnectDevice: false
 		}
 	},
 	onLoad(options) {
@@ -278,7 +280,7 @@ export default {
 		this.checkPermissionsAndNetwork();
 	},
 	onUnload() {
-		if (blueModule) {
+		if (blueModule && this.ifBleScan) {
 			blueModule.stopBleScan();
 		}
 		this.disconnectDevice();
@@ -865,6 +867,7 @@ export default {
 			console.log('blueModule111===',blueModule);
 			if (blueModule) {
 				console.log('blueModule===',blueModule);
+				this.ifBleScan = true;
 				blueModule.startBleScan({
 					securityType: 2,
 					deviceNamePrefix: 'Namy'
@@ -1070,6 +1073,7 @@ export default {
 				});
 			}else{
 				console.log('connectDevice22222');
+				this.ifConnectDevice = true;
 				blueModule.connectDevice({
 					mac: this.foundDevice.deviceId, //mac地址
 					serviceUuid: this.foundDevice.serviceUuid
@@ -1098,7 +1102,9 @@ export default {
 					deviceId: this.foundDevice.deviceId
 				});
 			}else{	
-				blueModule.disconnectDevice();
+				if(blueModule && this.ifConnectDevice){
+					blueModule.disconnectDevice();
+				}
 			}
 		},
 
