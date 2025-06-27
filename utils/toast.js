@@ -40,6 +40,17 @@ class CustomToast {
     })
   }
 
+  // 清除所有现有的Toast
+  clearAllToasts() {
+    globalToastState.listeners.forEach(callback => {
+      try {
+        callback({ action: 'clear' })
+      } catch (error) {
+        console.error('Toast清除回调错误:', error)
+      }
+    })
+  }
+
   // 不再需要DOM操作方法，统一使用Vue组件
 
   success(message, duration = 2000) {
@@ -51,6 +62,9 @@ class CustomToast {
   }
 
   show(type, message, duration) {
+    // 先清除所有现有的Toast
+    this.clearAllToasts()
+    
     const toast = {
       id: ++this.toastId,
       type,

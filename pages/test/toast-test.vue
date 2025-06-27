@@ -44,7 +44,7 @@ export default {
 
   methods: {
     testSuccess() {
-      this.$toast.success('操作成功！', 30000)
+      this.$toast.success('操作成功！')
     },
     
     testError() {

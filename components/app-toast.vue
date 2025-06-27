@@ -41,6 +41,12 @@ export default {
   },
   methods: {
     showToast(toast) {
+      // 如果是清除操作，直接清空所有Toast
+      if (toast.action === 'clear') {
+        this.toastList = []
+        return
+      }
+      
       this.toastList.push({
         ...toast,
         show: false
