@@ -52,7 +52,7 @@
 				<image src="/static/icon/menu-arrow.svg" mode="widthFix"></image>
 			</view>
 
-			<view class="menu-item" @click="showComingSoon">
+			<view class="menu-item" @click="openPrivacyProtocol">
 				<text class="menu-text">隐私协议</text>
 				<image src="/static/icon/menu-arrow.svg" mode="widthFix"></image>
 			</view>
@@ -129,6 +129,11 @@ export default {
 		openUserInfo() {
 			uni.navigateTo({
 				url: '/pages/personal/user-info'
+			})
+		},
+		openPrivacyProtocol() {
+			uni.navigateTo({
+				url: '/pages/test/toast-test'
 			})
 		}
 	}

@@ -3,7 +3,8 @@
 		"autoscan": true,
 		"custom": {
 			"custom-tabbar": "@/components/custom-tabbar.vue",
-			"head-return": "@/components/head-return.vue"
+			"head-return": "@/components/head-return.vue",
+			"app-toast": "@/components/app-toast.vue"
 		}
 	},
 	"pages": [{
@@ -139,6 +140,18 @@
 	},
 	{
 		"path" : "pages/login/index",
+		"style" : 
+		{
+			"navigationStyle": "custom",
+			"navigationBarTitleText": "",
+			"app-plus": {
+				"titleNView": false
+			}
+		}
+	},
+
+	{
+		"path" : "pages/test/toast-test",
 		"style" : 
 		{
 			"navigationStyle": "custom",
