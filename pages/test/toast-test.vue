@@ -34,13 +34,9 @@
 </template>
 
 <script>
-import AppToast from '@/components/app-toast.vue'
 
 export default {
   name: 'FinalTest',
-  components: {
-    'app-toast': AppToast
-  },
 
   methods: {
     testSuccess() {
